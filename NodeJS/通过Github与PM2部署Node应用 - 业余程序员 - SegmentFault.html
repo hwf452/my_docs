@@ -1,0 +1,1826 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1"><meta name="renderer" content="webkit"><meta property="qc:admins" content="15317273575564615446375"><meta property="og:image" content="https://static.segmentfault.com/v-59799b27/global/img/touch-icon.png"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"><meta name="alexaVerifyID" content="LkzCRJ7rPEUwt6fVey2vhxiw1vQ"><meta name="apple-itunes-app" content="app-id=958101793, app-argument="><title>通过Github与PM2部署Node应用 - 业余程序员 - SegmentFault</title><meta name="description" content="背景 前一段时间，是通过百度云的BAE部署自己的Node应用的，不过随着应用的不断开发，BAE的限制不断制约了应用的使用。于是着手将应用迁移到阿里云的ECS上去。本文即是介绍了如何在ECS上搭建Node环境，并将本地制..."><meta name="keywords" content="node,pm2,github,nginx,express"><link rel="search" type="application/opensearchdescription+xml" href="https://segmentfault.com/opensearch.xml" title="SegmentFault"><link rel="shortcut icon" href="https://static.segmentfault.com/v-59799b27/global/img/favicon.ico"><link rel="apple-touch-icon" href="https://static.segmentfault.com/v-59799b27/global/img/touch-icon.png"><meta name="msapplication-TileColor" content="#009a61"><meta name="msapplication-square150x150logo" content="https://static.segmentfault.com/v-59799b27/global/img/touch-icon.png"><link rel="alternate" type="application/atom+xml" title="SegmentFault 最新问题" href="https://segmentfault.com/feeds/questions"><link rel="alternate" type="application/atom+xml" title="SegmentFault 最新文章" href="https://segmentfault.com/feeds/blogs"><link rel="stylesheet" href="%E9%80%9A%E8%BF%87Github%E4%B8%8EPM2%E9%83%A8%E7%BD%B2Node%E5%BA%94%E7%94%A8%20-%20%E4%B8%9A%E4%BD%99%E7%A8%8B%E5%BA%8F%E5%91%98%20-%20SegmentFault_files/global.css"><link rel="stylesheet" href="%E9%80%9A%E8%BF%87Github%E4%B8%8EPM2%E9%83%A8%E7%BD%B2Node%E5%BA%94%E7%94%A8%20-%20%E4%B8%9A%E4%BD%99%E7%A8%8B%E5%BA%8F%E5%91%98%20-%20SegmentFault_files/blog.css"><link rel="stylesheet" href="%E9%80%9A%E8%BF%87Github%E4%B8%8EPM2%E9%83%A8%E7%BD%B2Node%E5%BA%94%E7%94%A8%20-%20%E4%B8%9A%E4%BD%99%E7%A8%8B%E5%BA%8F%E5%91%98%20-%20SegmentFault_files/responsive.css"><script src="%E9%80%9A%E8%BF%87Github%E4%B8%8EPM2%E9%83%A8%E7%BD%B2Node%E5%BA%94%E7%94%A8%20-%20%E4%B8%9A%E4%BD%99%E7%A8%8B%E5%BA%8F%E5%91%98%20-%20SegmentFault_files/ca-pub-6330872677300335.js"></script><script type="text/javascript" async="" id="ac_js86_$5916187376" src="%E9%80%9A%E8%BF%87Github%E4%B8%8EPM2%E9%83%A8%E7%BD%B2Node%E5%BA%94%E7%94%A8%20-%20%E4%B8%9A%E4%BD%99%E7%A8%8B%E5%BA%8F%E5%91%98%20-%20SegmentFault_files/r.js"></script></head><body data-mod="blog" class="blog-post "><iframe style="width: 0px; height: 0px; display: none;" src="%E9%80%9A%E8%BF%87Github%E4%B8%8EPM2%E9%83%A8%E7%BD%B2Node%E5%BA%94%E7%94%A8%20-%20%E4%B8%9A%E4%BD%99%E7%A8%8B%E5%BA%8F%E5%91%98%20-%20SegmentFault_files/acookie.html"></iframe><!--[if lt IE 9]><div class="alert alert-danger topframe" role="alert">你的浏览器实在<strong>太太太太太太旧了</strong>，放学别走，升级完浏览器再说 <a target="_blank" class="alert-link" href="http://browsehappy.com">立即升级</a></div><![endif]--><img id="icon4weChat" style="height: 0;width: 0;" data-src="https://static.segmentfault.com/v-59799b27/global/img/touch-icon-512.png"><div class="global-nav sf-header sf-header--index"><nav class="container nav"><div class="visible-xs header-response"><a href="https://segmentfault.com/search" style="display:block"><i class="fa fa-search" aria-hidden="true"></i></a><div class="sf-header__logo sf-header__logo--response"><h1><a href="https://segmentfault.com/" style="height:24px; background-size: auto 24px;"></a></h1></div><a href="https://segmentfault.com/user/login" class="pull-right login-btn"><i class="fa fa-user" aria-hidden="true"></i></a><div class="bottom-nav"><div class="opts"><a class="opts-group " href="https://segmentfault.com/questions"><i class="fa fa-comments" aria-hidden="true"></i><span>问答</span></a><a class="opts-group " href="https://segmentfault.com/news"><i class="fa fa-newspaper-o" aria-hidden="true"></i><span>头条</span></a><a class="opts-group active" href="https://segmentfault.com/blogs"><i class="fa fa-pencil-square" aria-hidden="true"></i><span>专栏</span></a><a class="opts-group " href="https://segmentfault.com/lives"><i class="fa fa-play-circle" aria-hidden="true"></i><span>讲堂</span></a><div class="opts-group"><div class="btn-group dropup"><i class="fa fa-bars dropdown hoverDropdown" data-toggle="dropdown" aria-hidden="true"><span>更多</span></i><ul class="dropdown-menu"><li><a href="https://segmentfault.com/jobs">职位</a></li><li><a href="https://segmentfault.com/events">活动</a></li><li><a href="https://segmentfault.com/tags">标签</a></li><li><a href="https://segmentfault.com/badges">徽章</a></li></ul></div></div></div></div></div><div class="row hidden-xs"><div class="col-sm-8 col-md-9 col-lg-9"><div class="sf-header__logo"><h1><a href="https://segmentfault.com/">SegmentFault</a></h1></div><div><ul class="menu list-inline pull-left hidden-xs"><li class="menu__item"><a href="https://segmentfault.com/questions" class="">问答</a></li><li class="menu__item"><a href="https://segmentfault.com/news" class="">头条</a></li><li class="menu__item"><a href="https://segmentfault.com/blogs" class="active-nav">专栏</a></li><li class="menu__item"><a href="https://segmentfault.com/lives" class="">讲堂</a></li><li class="menu__item"><a href="https://segmentfault.com/jobs" class="">职位</a></li><li class="menu__item"><a href="https://segmentfault.com/events" class="">活动</a></li></ul><form action="/search" class="header-search  hidden-sm hidden-xs pull-right"><button class="btn btn-link"><span class="sr-only">搜索</span><span class="glyphicon glyphicon-search"></span></button><input id="searchBox" name="q" placeholder="搜索问题或关键字" class="form-control" type="text"></form></div></div><div class="col-sm-4 col-md-3 col-lg-3 text-right"><ul class="opts list-inline hidden-xs"><li class="opts__item"><a href="https://segmentfault.com/user/login" class="SFLogin btn-signin" style="margin-bottom:2px;">立即登录</a><a href="https://segmentfault.com/user/login" class="SFLogin ml10 btn-signup" onclick="_gaq.push(['_trackEvent', 'Button', 'Click', 'Login']);">免费注册</a></li></ul></div></div></nav></div>
+    
+<input id="articleId" value="1190000005171229" class="hidden">
+<div class="wrap" data-blogid="1200000005171176">
+    <div class="post-topheader custom-">
+        <div class="container">
+            <div class="block-for-right-border">
+                <div class="row">
+                    <div class="col-md-9 col-sm-8 col-xs-12">
+                        <div class="post-topheader__info" data-username="e10101" data-userslug="e10101" data-useravatar="https://sfault-avatar.b0.upaiyun.com/453/230/453230058-573ffdd5eef2b_big64">
+
+                            <h1 class="h3 post-topheader__info--title" id="articleTitle" data-id="1190000005171229">
+                                <a href="https://segmentfault.com/a/1190000005171229"> 通过Github与PM2部署Node应用</a>
+                            </h1>
+
+                            <div class="content__tech">
+                                <ul class="taglist--inline inline-block article__title--tag mr10">
+                                                                            <li class="tagPopup mb5"><a class="tag" href="https://segmentfault.com/t/node/blogs" data-toggle="popover" data-img="" data-placement="top" data-original-title="node" data-id="1040000003033284">node</a></li>
+                                                                            <li class="tagPopup mb5"><a class="tag" href="https://segmentfault.com/t/pm2/blogs" data-toggle="popover" data-img="" data-placement="top" data-original-title="pm2" data-id="1040000002434675">pm2</a></li>
+                                                                            <li class="tagPopup mb5"><a class="tag" href="https://segmentfault.com/t/github/blogs" data-toggle="popover" data-img="https://sfault-avatar.b0.upaiyun.com/154/051/1540511964-1040000000091226_huge256" data-placement="top" data-original-title="github" data-id="1040000000091226">github</a></li>
+                                                                            <li class="tagPopup mb5"><a class="tag" href="https://segmentfault.com/t/nginx/blogs" data-toggle="popover" data-img="https://sfault-avatar.b0.upaiyun.com/194/948/1949480134-1040000000090145_huge256" data-placement="top" data-original-title="nginx" data-id="1040000000090145">nginx</a></li>
+                                                                            <li class="tagPopup mb5"><a class="tag" href="https://segmentfault.com/t/express/blogs" data-toggle="popover" data-img="" data-placement="top" data-original-title="express" data-id="1040000000166256">express</a></li>
+                                                                    </ul>
+                                                                                                <div class="article__author">
+                                    <a href="https://segmentfault.com/u/e10101" class="mr5 "><strong>e10101</strong></a>
+                                    2016年05月21日发布
+                                                                                                        </div>
+                            </div>
+
+                                                        <form class="form form__tech hidden" data-action="#">
+                                <span class="pull-right">
+                                    <button class="btn btn-default save-tags-btn" type="button">保存</button>
+                                </span>
+                                <div class="form-group" style="margin-right: 65px">
+                                    <label for="tags" class="sr-only">标签：至少1个，最多5个</label>
+                                    <input class="tagsInput form-control hidden" data-init="[{&quot;name&quot;:&quot;node&quot;,&quot;url&quot;:&quot;\/t\/node&quot;,&quot;id&quot;:&quot;1040000003033284&quot;,&quot;thumbnailUrl&quot;:&quot;&quot;},{&quot;name&quot;:&quot;pm2&quot;,&quot;url&quot;:&quot;\/t\/pm2&quot;,&quot;id&quot;:&quot;1040000002434675&quot;,&quot;thumbnailUrl&quot;:&quot;&quot;},{&quot;name&quot;:&quot;github&quot;,&quot;url&quot;:&quot;\/t\/github&quot;,&quot;id&quot;:&quot;1040000000091226&quot;,&quot;thumbnailUrl&quot;:&quot;https:\/\/sfault-avatar.b0.upaiyun.com\/154\/051\/1540511964-1040000000091226_huge256&quot;},{&quot;name&quot;:&quot;nginx&quot;,&quot;url&quot;:&quot;\/t\/nginx&quot;,&quot;id&quot;:&quot;1040000000090145&quot;,&quot;thumbnailUrl&quot;:&quot;https:\/\/sfault-avatar.b0.upaiyun.com\/194\/948\/1949480134-1040000000090145_huge256&quot;},{&quot;name&quot;:&quot;express&quot;,&quot;url&quot;:&quot;\/t\/express&quot;,&quot;id&quot;:&quot;1040000000166256&quot;,&quot;thumbnailUrl&quot;:&quot;&quot;}]" name="tags" placeholder="标签，如：php 可使用逗号,分号;分隔" data-role="tagsinput" type="text"><div class="sf-typeHelper"><span class="sf-typeHelper-item  ">node<span data-role="remove">×</span></span><span class="sf-typeHelper-item  ">pm2<span data-role="remove">×</span></span><span class="sf-typeHelper-item  ">github<span data-role="remove">×</span></span><span class="sf-typeHelper-item  ">nginx<span data-role="remove">×</span></span><span class="sf-typeHelper-item  ">express<span data-role="remove">×</span></span><input data-role="sf_typeHelper-input" class="sf-typeHelper-input" placeholder="标签，如：php 可使用逗号,分号;分隔" style="width: 20em;" type="text"><ul class="sf-typeHelper-list dropdown-menu"></ul></div>
+                                    <div role="tabpanel" class="techTags panel panel-default techTags-panel" data-tech="{&quot;\u5f00\u53d1\u8bed\u8a00&quot;:[{&quot;id&quot;:&quot;1040000000089436&quot;,&quot;name&quot;:&quot;javascript&quot;},{&quot;id&quot;:&quot;1040000000089387&quot;,&quot;name&quot;:&quot;php&quot;},{&quot;id&quot;:&quot;1040000000089434&quot;,&quot;name&quot;:&quot;css&quot;},{&quot;id&quot;:&quot;1040000000089571&quot;,&quot;name&quot;:&quot;html&quot;},{&quot;id&quot;:&quot;1040000000089449&quot;,&quot;name&quot;:&quot;java&quot;},{&quot;id&quot;:&quot;1040000000089534&quot;,&quot;name&quot;:&quot;python&quot;},{&quot;id&quot;:&quot;1040000000089409&quot;,&quot;name&quot;:&quot;html5&quot;},{&quot;id&quot;:&quot;1040000000089918&quot;,&quot;name&quot;:&quot;node.js&quot;},{&quot;id&quot;:&quot;1040000000089741&quot;,&quot;name&quot;:&quot;c++&quot;},{&quot;id&quot;:&quot;1040000000089457&quot;,&quot;name&quot;:&quot;c&quot;},{&quot;id&quot;:&quot;1040000000090209&quot;,&quot;name&quot;:&quot;objective-c&quot;},{&quot;id&quot;:&quot;1040000000089669&quot;,&quot;name&quot;:&quot;shell&quot;},{&quot;id&quot;:&quot;1040000000090203&quot;,&quot;name&quot;:&quot;golang&quot;},{&quot;id&quot;:&quot;1040000000531223&quot;,&quot;name&quot;:&quot;swift&quot;},{&quot;id&quot;:&quot;1040000000089581&quot;,&quot;name&quot;:&quot;c#&quot;},{&quot;id&quot;:&quot;1040000000089699&quot;,&quot;name&quot;:&quot;ruby&quot;},{&quot;id&quot;:&quot;1040000000089686&quot;,&quot;name&quot;:&quot;bash&quot;},{&quot;id&quot;:&quot;1040000000091262&quot;,&quot;name&quot;:&quot;sass&quot;},{&quot;id&quot;:&quot;1040000000090433&quot;,&quot;name&quot;:&quot;asp.net&quot;},{&quot;id&quot;:&quot;1040000000365394&quot;,&quot;name&quot;:&quot;typescript&quot;},{&quot;id&quot;:&quot;1040000000090600&quot;,&quot;name&quot;:&quot;less&quot;},{&quot;id&quot;:&quot;1040000000090208&quot;,&quot;name&quot;:&quot;lua&quot;},{&quot;id&quot;:&quot;1040000000090228&quot;,&quot;name&quot;:&quot;scala&quot;},{&quot;id&quot;:&quot;1040000000161068&quot;,&quot;name&quot;:&quot;coffeescript&quot;},{&quot;id&quot;:&quot;1040000000090194&quot;,&quot;name&quot;:&quot;actionscript&quot;},{&quot;id&quot;:&quot;1040000000090201&quot;,&quot;name&quot;:&quot;erlang&quot;},{&quot;id&quot;:&quot;1040000000089698&quot;,&quot;name&quot;:&quot;perl&quot;},{&quot;id&quot;:&quot;1040000000311191&quot;,&quot;name&quot;:&quot;rust&quot;}],&quot;\u5e73\u53f0\u6846\u67b6&quot;:[{&quot;id&quot;:&quot;1040000000196640&quot;,&quot;name&quot;:&quot;laravel&quot;},{&quot;id&quot;:&quot;1040000000125263&quot;,&quot;name&quot;:&quot;flask&quot;},{&quot;id&quot;:&quot;1040000000089564&quot;,&quot;name&quot;:&quot;django&quot;},{&quot;id&quot;:&quot;1040000000090103&quot;,&quot;name&quot;:&quot;spring&quot;},{&quot;id&quot;:&quot;1040000000166256&quot;,&quot;name&quot;:&quot;express&quot;},{&quot;id&quot;:&quot;1040000000089646&quot;,&quot;name&quot;:&quot;ruby-on-rails&quot;},{&quot;id&quot;:&quot;1040000000090398&quot;,&quot;name&quot;:&quot;yii&quot;},{&quot;id&quot;:&quot;1040000000116331&quot;,&quot;name&quot;:&quot;tornado&quot;},{&quot;id&quot;:&quot;1040000000622042&quot;,&quot;name&quot;:&quot;koa&quot;},{&quot;id&quot;:&quot;1040000000089638&quot;,&quot;name&quot;:&quot;struts&quot;}],&quot;\u670d\u52a1\u5668&quot;:[{&quot;id&quot;:&quot;1040000000089392&quot;,&quot;name&quot;:&quot;linux&quot;},{&quot;id&quot;:&quot;1040000000090145&quot;,&quot;name&quot;:&quot;nginx&quot;},{&quot;id&quot;:&quot;1040000000089761&quot;,&quot;name&quot;:&quot;apache&quot;},{&quot;id&quot;:&quot;1040000000366352&quot;,&quot;name&quot;:&quot;docker&quot;},{&quot;id&quot;:&quot;1040000000090245&quot;,&quot;name&quot;:&quot;ubuntu&quot;},{&quot;id&quot;:&quot;1040000000090249&quot;,&quot;name&quot;:&quot;centos&quot;},{&quot;id&quot;:&quot;1040000000090117&quot;,&quot;name&quot;:&quot;tomcat&quot;},{&quot;id&quot;:&quot;1040000000090401&quot;,&quot;name&quot;:&quot;\u7f13\u5b58&quot;},{&quot;id&quot;:&quot;1040000000090107&quot;,&quot;name&quot;:&quot;\u8d1f\u8f7d\u5747\u8861&quot;},{&quot;id&quot;:&quot;1040000000090646&quot;,&quot;name&quot;:&quot;unix&quot;},{&quot;id&quot;:&quot;1040000000089648&quot;,&quot;name&quot;:&quot;hadoop&quot;},{&quot;id&quot;:&quot;1040000000090609&quot;,&quot;name&quot;:&quot;windows-server&quot;}],&quot;\u6570\u636e\u5e93\u548c\u7f13\u5b58&quot;:[{&quot;id&quot;:&quot;1040000000089439&quot;,&quot;name&quot;:&quot;mysql&quot;},{&quot;id&quot;:&quot;1040000000090049&quot;,&quot;name&quot;:&quot;sql&quot;},{&quot;id&quot;:&quot;1040000000089431&quot;,&quot;name&quot;:&quot;redis&quot;},{&quot;id&quot;:&quot;1040000000089488&quot;,&quot;name&quot;:&quot;mongodb&quot;},{&quot;id&quot;:&quot;1040000000090701&quot;,&quot;name&quot;:&quot;oracle&quot;},{&quot;id&quot;:&quot;1040000000089432&quot;,&quot;name&quot;:&quot;nosql&quot;},{&quot;id&quot;:&quot;1040000000089873&quot;,&quot;name&quot;:&quot;memcached&quot;},{&quot;id&quot;:&quot;1040000000090424&quot;,&quot;name&quot;:&quot;sqlserver&quot;},{&quot;id&quot;:&quot;1040000000090354&quot;,&quot;name&quot;:&quot;sqlite&quot;},{&quot;id&quot;:&quot;1040000000090861&quot;,&quot;name&quot;:&quot;postgresql&quot;}],&quot;\u5f00\u53d1\u5de5\u5177&quot;:[{&quot;id&quot;:&quot;1040000000089459&quot;,&quot;name&quot;:&quot;git&quot;},{&quot;id&quot;:&quot;1040000000091226&quot;,&quot;name&quot;:&quot;github&quot;},{&quot;id&quot;:&quot;1040000000089467&quot;,&quot;name&quot;:&quot;vim&quot;},{&quot;id&quot;:&quot;1040000000089579&quot;,&quot;name&quot;:&quot;xcode&quot;},{&quot;id&quot;:&quot;1040000000126097&quot;,&quot;name&quot;:&quot;sublime-text&quot;},{&quot;id&quot;:&quot;1040000000089509&quot;,&quot;name&quot;:&quot;eclipse&quot;},{&quot;id&quot;:&quot;1040000000090560&quot;,&quot;name&quot;:&quot;intellij-idea&quot;},{&quot;id&quot;:&quot;1040000002720957&quot;,&quot;name&quot;:&quot;visual-studio-code&quot;},{&quot;id&quot;:&quot;1040000000089447&quot;,&quot;name&quot;:&quot;svn&quot;},{&quot;id&quot;:&quot;1040000000090186&quot;,&quot;name&quot;:&quot;maven&quot;},{&quot;id&quot;:&quot;1040000000090473&quot;,&quot;name&quot;:&quot;ide&quot;},{&quot;id&quot;:&quot;1040000000090524&quot;,&quot;name&quot;:&quot;atom&quot;},{&quot;id&quot;:&quot;1040000000090231&quot;,&quot;name&quot;:&quot;visual-studio&quot;},{&quot;id&quot;:&quot;1040000000090216&quot;,&quot;name&quot;:&quot;emacs&quot;},{&quot;id&quot;:&quot;1040000000183694&quot;,&quot;name&quot;:&quot;hg&quot;},{&quot;id&quot;:&quot;1040000000089663&quot;,&quot;name&quot;:&quot;textmate&quot;}],&quot;\u7cfb\u7edf\u8bbe\u5907&quot;:[{&quot;id&quot;:&quot;1040000000089658&quot;,&quot;name&quot;:&quot;android&quot;},{&quot;id&quot;:&quot;1040000000089442&quot;,&quot;name&quot;:&quot;ios&quot;},{&quot;id&quot;:&quot;1040000000089407&quot;,&quot;name&quot;:&quot;chrome&quot;},{&quot;id&quot;:&quot;1040000000089709&quot;,&quot;name&quot;:&quot;windows&quot;},{&quot;id&quot;:&quot;1040000000089498&quot;,&quot;name&quot;:&quot;iphone&quot;},{&quot;id&quot;:&quot;1040000000125504&quot;,&quot;name&quot;:&quot;internet-explorer&quot;},{&quot;id&quot;:&quot;1040000000090217&quot;,&quot;name&quot;:&quot;firefox&quot;},{&quot;id&quot;:&quot;1040000000089499&quot;,&quot;name&quot;:&quot;safari&quot;},{&quot;id&quot;:&quot;1040000000090638&quot;,&quot;name&quot;:&quot;ipad&quot;},{&quot;id&quot;:&quot;1040000000090218&quot;,&quot;name&quot;:&quot;opera&quot;},{&quot;id&quot;:&quot;1040000002871462&quot;,&quot;name&quot;:&quot;apple-watch&quot;}],&quot;\u5176\u5b83&quot;:[{&quot;id&quot;:&quot;1040000000089409&quot;,&quot;name&quot;:&quot;html5&quot;},{&quot;id&quot;:&quot;1040000002893277&quot;,&quot;name&quot;:&quot;react.js&quot;},{&quot;id&quot;:&quot;1040000000090137&quot;,&quot;name&quot;:&quot;\u641c\u7d22\u5f15\u64ce&quot;},{&quot;id&quot;:&quot;1040000000123810&quot;,&quot;name&quot;:&quot;virtualenv&quot;},{&quot;id&quot;:&quot;1040000000090316&quot;,&quot;name&quot;:&quot;lucene&quot;}]}">
+    <ul class="nav nav-tabs" role="tablist">
+                    <li role="presentation" class="active"><a href="#%E5%BC%80%E5%8F%91%E8%AF%AD%E8%A8%80" aria-controls="type" role="tab" data-toggle="tab">开发语言</a>
+            </li>
+                    <li role="presentation" class=""><a href="#%E5%B9%B3%E5%8F%B0%E6%A1%86%E6%9E%B6" aria-controls="type" role="tab" data-toggle="tab">平台框架</a>
+            </li>
+                    <li role="presentation" class=""><a href="#%E6%9C%8D%E5%8A%A1%E5%99%A8" aria-controls="type" role="tab" data-toggle="tab">服务器</a>
+            </li>
+                    <li role="presentation" class=""><a href="#%E6%95%B0%E6%8D%AE%E5%BA%93%E5%92%8C%E7%BC%93%E5%AD%98" aria-controls="type" role="tab" data-toggle="tab">数据库和缓存</a>
+            </li>
+                    <li role="presentation" class=""><a href="#%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7" aria-controls="type" role="tab" data-toggle="tab">开发工具</a>
+            </li>
+                    <li role="presentation" class=""><a href="#%E7%B3%BB%E7%BB%9F%E8%AE%BE%E5%A4%87" aria-controls="type" role="tab" data-toggle="tab">系统设备</a>
+            </li>
+                    <li role="presentation" class=""><a href="#%E5%85%B6%E5%AE%83" aria-controls="type" role="tab" data-toggle="tab">其它</a>
+            </li>
+            </ul>
+    <div class="tab-content">
+                    <div role="tabpanel" class="tab-pane active" id="开发语言">
+                <ul class="taglist--inline">
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089436&quot;,&quot;name&quot;:&quot;javascript&quot;}" href="javascript:%20void(0);">javascript</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089387&quot;,&quot;name&quot;:&quot;php&quot;}" href="javascript:%20void(0);">php</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089434&quot;,&quot;name&quot;:&quot;css&quot;}" href="javascript:%20void(0);">css</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089571&quot;,&quot;name&quot;:&quot;html&quot;}" href="javascript:%20void(0);">html</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089449&quot;,&quot;name&quot;:&quot;java&quot;}" href="javascript:%20void(0);">java</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089534&quot;,&quot;name&quot;:&quot;python&quot;}" href="javascript:%20void(0);">python</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089409&quot;,&quot;name&quot;:&quot;html5&quot;}" href="javascript:%20void(0);">html5</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089918&quot;,&quot;name&quot;:&quot;node.js&quot;}" href="javascript:%20void(0);">node.js</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089741&quot;,&quot;name&quot;:&quot;c++&quot;}" href="javascript:%20void(0);">c++</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089457&quot;,&quot;name&quot;:&quot;c&quot;}" href="javascript:%20void(0);">c</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090209&quot;,&quot;name&quot;:&quot;objective-c&quot;}" href="javascript:%20void(0);">objective-c</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089669&quot;,&quot;name&quot;:&quot;shell&quot;}" href="javascript:%20void(0);">shell</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090203&quot;,&quot;name&quot;:&quot;golang&quot;}" href="javascript:%20void(0);">golang</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000531223&quot;,&quot;name&quot;:&quot;swift&quot;}" href="javascript:%20void(0);">swift</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089581&quot;,&quot;name&quot;:&quot;c#&quot;}" href="javascript:%20void(0);">c#</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089699&quot;,&quot;name&quot;:&quot;ruby&quot;}" href="javascript:%20void(0);">ruby</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089686&quot;,&quot;name&quot;:&quot;bash&quot;}" href="javascript:%20void(0);">bash</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000091262&quot;,&quot;name&quot;:&quot;sass&quot;}" href="javascript:%20void(0);">sass</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090433&quot;,&quot;name&quot;:&quot;asp.net&quot;}" href="javascript:%20void(0);">asp.net</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000365394&quot;,&quot;name&quot;:&quot;typescript&quot;}" href="javascript:%20void(0);">typescript</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090600&quot;,&quot;name&quot;:&quot;less&quot;}" href="javascript:%20void(0);">less</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090208&quot;,&quot;name&quot;:&quot;lua&quot;}" href="javascript:%20void(0);">lua</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090228&quot;,&quot;name&quot;:&quot;scala&quot;}" href="javascript:%20void(0);">scala</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000161068&quot;,&quot;name&quot;:&quot;coffeescript&quot;}" href="javascript:%20void(0);">coffeescript</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090194&quot;,&quot;name&quot;:&quot;actionscript&quot;}" href="javascript:%20void(0);">actionscript</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090201&quot;,&quot;name&quot;:&quot;erlang&quot;}" href="javascript:%20void(0);">erlang</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089698&quot;,&quot;name&quot;:&quot;perl&quot;}" href="javascript:%20void(0);">perl</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000311191&quot;,&quot;name&quot;:&quot;rust&quot;}" href="javascript:%20void(0);">rust</a>
+                        </li>
+                                    </ul>
+            </div>
+                    <div role="tabpanel" class="tab-pane " id="平台框架">
+                <ul class="taglist--inline">
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000196640&quot;,&quot;name&quot;:&quot;laravel&quot;}" href="javascript:%20void(0);">laravel</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000125263&quot;,&quot;name&quot;:&quot;flask&quot;}" href="javascript:%20void(0);">flask</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089564&quot;,&quot;name&quot;:&quot;django&quot;}" href="javascript:%20void(0);">django</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090103&quot;,&quot;name&quot;:&quot;spring&quot;}" href="javascript:%20void(0);">spring</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000166256&quot;,&quot;name&quot;:&quot;express&quot;}" href="javascript:%20void(0);">express</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089646&quot;,&quot;name&quot;:&quot;ruby-on-rails&quot;}" href="javascript:%20void(0);">ruby-on-rails</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090398&quot;,&quot;name&quot;:&quot;yii&quot;}" href="javascript:%20void(0);">yii</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000116331&quot;,&quot;name&quot;:&quot;tornado&quot;}" href="javascript:%20void(0);">tornado</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000622042&quot;,&quot;name&quot;:&quot;koa&quot;}" href="javascript:%20void(0);">koa</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089638&quot;,&quot;name&quot;:&quot;struts&quot;}" href="javascript:%20void(0);">struts</a>
+                        </li>
+                                    </ul>
+            </div>
+                    <div role="tabpanel" class="tab-pane " id="服务器">
+                <ul class="taglist--inline">
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089392&quot;,&quot;name&quot;:&quot;linux&quot;}" href="javascript:%20void(0);">linux</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090145&quot;,&quot;name&quot;:&quot;nginx&quot;}" href="javascript:%20void(0);">nginx</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089761&quot;,&quot;name&quot;:&quot;apache&quot;}" href="javascript:%20void(0);">apache</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000366352&quot;,&quot;name&quot;:&quot;docker&quot;}" href="javascript:%20void(0);">docker</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090245&quot;,&quot;name&quot;:&quot;ubuntu&quot;}" href="javascript:%20void(0);">ubuntu</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090249&quot;,&quot;name&quot;:&quot;centos&quot;}" href="javascript:%20void(0);">centos</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090117&quot;,&quot;name&quot;:&quot;tomcat&quot;}" href="javascript:%20void(0);">tomcat</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090401&quot;,&quot;name&quot;:&quot;\u7f13\u5b58&quot;}" href="javascript:%20void(0);">缓存</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090107&quot;,&quot;name&quot;:&quot;\u8d1f\u8f7d\u5747\u8861&quot;}" href="javascript:%20void(0);">负载均衡</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090646&quot;,&quot;name&quot;:&quot;unix&quot;}" href="javascript:%20void(0);">unix</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089648&quot;,&quot;name&quot;:&quot;hadoop&quot;}" href="javascript:%20void(0);">hadoop</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090609&quot;,&quot;name&quot;:&quot;windows-server&quot;}" href="javascript:%20void(0);">windows-server</a>
+                        </li>
+                                    </ul>
+            </div>
+                    <div role="tabpanel" class="tab-pane " id="数据库和缓存">
+                <ul class="taglist--inline">
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089439&quot;,&quot;name&quot;:&quot;mysql&quot;}" href="javascript:%20void(0);">mysql</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090049&quot;,&quot;name&quot;:&quot;sql&quot;}" href="javascript:%20void(0);">sql</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089431&quot;,&quot;name&quot;:&quot;redis&quot;}" href="javascript:%20void(0);">redis</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089488&quot;,&quot;name&quot;:&quot;mongodb&quot;}" href="javascript:%20void(0);">mongodb</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090701&quot;,&quot;name&quot;:&quot;oracle&quot;}" href="javascript:%20void(0);">oracle</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089432&quot;,&quot;name&quot;:&quot;nosql&quot;}" href="javascript:%20void(0);">nosql</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089873&quot;,&quot;name&quot;:&quot;memcached&quot;}" href="javascript:%20void(0);">memcached</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090424&quot;,&quot;name&quot;:&quot;sqlserver&quot;}" href="javascript:%20void(0);">sqlserver</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090354&quot;,&quot;name&quot;:&quot;sqlite&quot;}" href="javascript:%20void(0);">sqlite</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090861&quot;,&quot;name&quot;:&quot;postgresql&quot;}" href="javascript:%20void(0);">postgresql</a>
+                        </li>
+                                    </ul>
+            </div>
+                    <div role="tabpanel" class="tab-pane " id="开发工具">
+                <ul class="taglist--inline">
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089459&quot;,&quot;name&quot;:&quot;git&quot;}" href="javascript:%20void(0);">git</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000091226&quot;,&quot;name&quot;:&quot;github&quot;}" href="javascript:%20void(0);">github</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089467&quot;,&quot;name&quot;:&quot;vim&quot;}" href="javascript:%20void(0);">vim</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089579&quot;,&quot;name&quot;:&quot;xcode&quot;}" href="javascript:%20void(0);">xcode</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000126097&quot;,&quot;name&quot;:&quot;sublime-text&quot;}" href="javascript:%20void(0);">sublime-text</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089509&quot;,&quot;name&quot;:&quot;eclipse&quot;}" href="javascript:%20void(0);">eclipse</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090560&quot;,&quot;name&quot;:&quot;intellij-idea&quot;}" href="javascript:%20void(0);">intellij-idea</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000002720957&quot;,&quot;name&quot;:&quot;visual-studio-code&quot;}" href="javascript:%20void(0);">visual-studio-code</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089447&quot;,&quot;name&quot;:&quot;svn&quot;}" href="javascript:%20void(0);">svn</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090186&quot;,&quot;name&quot;:&quot;maven&quot;}" href="javascript:%20void(0);">maven</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090473&quot;,&quot;name&quot;:&quot;ide&quot;}" href="javascript:%20void(0);">ide</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090524&quot;,&quot;name&quot;:&quot;atom&quot;}" href="javascript:%20void(0);">atom</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090231&quot;,&quot;name&quot;:&quot;visual-studio&quot;}" href="javascript:%20void(0);">visual-studio</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090216&quot;,&quot;name&quot;:&quot;emacs&quot;}" href="javascript:%20void(0);">emacs</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000183694&quot;,&quot;name&quot;:&quot;hg&quot;}" href="javascript:%20void(0);">hg</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089663&quot;,&quot;name&quot;:&quot;textmate&quot;}" href="javascript:%20void(0);">textmate</a>
+                        </li>
+                                    </ul>
+            </div>
+                    <div role="tabpanel" class="tab-pane " id="系统设备">
+                <ul class="taglist--inline">
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089658&quot;,&quot;name&quot;:&quot;android&quot;}" href="javascript:%20void(0);">android</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089442&quot;,&quot;name&quot;:&quot;ios&quot;}" href="javascript:%20void(0);">ios</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089407&quot;,&quot;name&quot;:&quot;chrome&quot;}" href="javascript:%20void(0);">chrome</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089709&quot;,&quot;name&quot;:&quot;windows&quot;}" href="javascript:%20void(0);">windows</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089498&quot;,&quot;name&quot;:&quot;iphone&quot;}" href="javascript:%20void(0);">iphone</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000125504&quot;,&quot;name&quot;:&quot;internet-explorer&quot;}" href="javascript:%20void(0);">internet-explorer</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090217&quot;,&quot;name&quot;:&quot;firefox&quot;}" href="javascript:%20void(0);">firefox</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089499&quot;,&quot;name&quot;:&quot;safari&quot;}" href="javascript:%20void(0);">safari</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090638&quot;,&quot;name&quot;:&quot;ipad&quot;}" href="javascript:%20void(0);">ipad</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090218&quot;,&quot;name&quot;:&quot;opera&quot;}" href="javascript:%20void(0);">opera</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000002871462&quot;,&quot;name&quot;:&quot;apple-watch&quot;}" href="javascript:%20void(0);">apple-watch</a>
+                        </li>
+                                    </ul>
+            </div>
+                    <div role="tabpanel" class="tab-pane " id="其它">
+                <ul class="taglist--inline">
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000089409&quot;,&quot;name&quot;:&quot;html5&quot;}" href="javascript:%20void(0);">html5</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000002893277&quot;,&quot;name&quot;:&quot;react.js&quot;}" href="javascript:%20void(0);">react.js</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090137&quot;,&quot;name&quot;:&quot;\u641c\u7d22\u5f15\u64ce&quot;}" href="javascript:%20void(0);">搜索引擎</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000123810&quot;,&quot;name&quot;:&quot;virtualenv&quot;}" href="javascript:%20void(0);">virtualenv</a>
+                        </li>
+                                            <li class="mb5">
+                            <a class="tag" data-tag="{&quot;id&quot;:&quot;1040000000090316&quot;,&quot;name&quot;:&quot;lucene&quot;}" href="javascript:%20void(0);">lucene</a>
+                        </li>
+                                    </ul>
+            </div>
+            </div>
+</div>
+
+                                </div>
+                               
+                            </form>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-4 hidden-xs">
+                        <ul class="post-topheader__side list-unstyled">
+                            <li>
+                                                                    <button type="button" class="btn btn-success btn-sm " data-id="1190000005171229" id="sideLike"><i class="fa fa-caret-up fa-lg" aria-hidden="true"></i>
+                                            &nbsp;&nbsp;<span class="seprator">|</span>&nbsp;&nbsp;
+                                            <span id="sideLikeNum">1</span>
+                                    </button>
+                                                                                                    <button type="button" id="sideBookmark" class="btn btn-default btn-sm " data-id="1190000005171229" data-type="article">
+                                            <span id="sideBookmarkText">收藏</span>&nbsp;&nbsp;<span class="seprator">|</span>&nbsp;&nbsp;<span id="sideBookmarkNum">20</span>
+                                    </button>
+                                                            </li>
+                            <li>
+                                <strong class="no-stress">2.6k</strong> 次浏览
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div><!-- end .post-topheader -->
+
+    <div class="container mt30">
+        <div class="row">
+            <div class="col-xs-12 col-md-9 main ">
+
+                
+                <div class="article fmt article__content" data-id="1190000005171229" data-license="sa">
+                    
+<h3 id="articleHeader0">背景</h3>
+<p>前一段时间，是通过百度云的BAE部署自己的Node应用的，不过随着应用的不断开发，BAE的限制不断制约了应用的使用。于是着手将应用迁移到阿里云的ECS上去。本文即是介绍了如何在ECS上搭建Node环境，并将本地制作好的应用进行发布。</p>
+<h3 id="articleHeader1">环境介绍</h3>
+<p><strong>本地：</strong> Mac OSX 10.11.4，应用采用的技术：Node.js + Express.js</p>
+<p><strong>远端服务器：</strong>阿里云ECS（1核CPU、1GB内存），IP：123.57.205.23，系统为CentOS7.0</p>
+<p><strong>Github：</strong>账户名：e10101</p>
+<h3 id="articleHeader2">系统架构</h3>
+<p>服务器部署Node的应用，并在3000端口进行监听。本地代码开发测试后，更新到Github私人仓库。然后通过pm2部署远程服务器。</p>
+<h3 id="articleHeader3">服务器端安装必要的软件</h3>
+<p>拟安装如下应用：Node、npm、pm2。<br>通过预留的账号密码登录系统，终端中输入：</p>
+<div class="widget-codetool" style="display: none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="ssh root@123.57.205.23
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs css"><code><span class="hljs-selector-tag">ssh</span> <span class="hljs-selector-tag">root</span>@<span class="hljs-keyword">123</span>.<span class="hljs-keyword">57</span>.<span class="hljs-keyword">205</span>.<span class="hljs-keyword">23</span>
+</code></pre>
+<p>更新软件：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="yum update -y
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs stata"><code>yum <span class="hljs-keyword">update</span> -<span class="hljs-built_in">y</span>
+</code></pre>
+<p>更新完毕后，安装Node.js：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="yum install nodejs -y
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs cmake"><code>yum <span class="hljs-keyword">install</span> nodejs -y
+</code></pre>
+<p>安装Npm：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="yum install yum -y
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs cmake"><code>yum <span class="hljs-keyword">install</span> yum -y
+</code></pre>
+<p>安装pm2：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="npm install pm2 -g
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs cmake"><code>npm <span class="hljs-keyword">install</span> pm2 -g
+</code></pre>
+<h3 id="articleHeader4">（可选）服务器端创建新用户</h3>
+<p>为服务器安全起见，创建用户（用户名：yishi）：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="useradd yishi
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs ebnf"><code><span class="hljs-attribute">useradd yishi</span>
+</code></pre>
+<p>设置密码：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="passwd yishi
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs ebnf"><code><span class="hljs-attribute">passwd yishi</span>
+</code></pre>
+<p>添加sudo权限：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="usermod -aG wheel yishi
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs bash"><code>usermod <span class="hljs-_">-a</span>G wheel yishi
+</code></pre>
+<h3 id="articleHeader5">（可选）服务器端关闭root用户的ssh访问</h3>
+<p>为服务器安全起见，关闭root账户的远程访问。</p>
+<p>打开配置文件：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="vi /etc/ssh/sshd_config
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs dts"><code>vi <span class="hljs-meta-keyword">/etc/</span>ssh/sshd_config
+</code></pre>
+<p>找到如下设置，并修改yes为no：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="PermitRootLogin no
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs nginx"><code><span class="hljs-attribute">PermitRootLogin</span> <span class="hljs-literal">no</span>
+</code></pre>
+<p>保存文件后，重启sshd服务：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="service sshd restart
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs ebnf"><code><span class="hljs-attribute">service sshd restart</span>
+</code></pre>
+<p>退出root账户，并使用新创建用户访问。</p>
+<h3 id="articleHeader6">本地安装pm2</h3>
+<p>Macbook中，由于已经具备了node以及npm，再次不介绍如何安装上述两个软件了。与服务器端类似，通过如下命令安装pm2：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="npm install pm2 -g
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs cmake"><code>npm <span class="hljs-keyword">install</span> pm2 -g
+</code></pre>
+<p>如果可得到版本号，则说明安装成功：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="pm2 -v
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs gcode"><code>p<span class="hljs-name">m2</span> -v
+</code></pre>
+<h3 id="articleHeader7">设置Github仓库</h3>
+<p>此处为方便演示，我们在Github上新建一个私人（private）仓库，名为pm2app。</p>
+<p>仓库创建后，还需要设置Deploy keys，依次点击Settings &gt; Deploy keys &gt; Add deploy key。其中的Key部分，可以在服务器端上通过ssh-keygen生成，并通过</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="cat ~/.ssh/id_rsa.pub
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs stylus"><code>cat ~/.ssh/id_rsa<span class="hljs-selector-class">.pub</span>
+</code></pre>
+<p>即可输出。输出后，复制到deploy key中点击Add key，完成设置。</p>
+<p>完成上述设置后，需要本地的应用代码关联此Github仓库，按照Github官网的介绍，通过在本地应用下执行：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="git remote add origin https://github.com/e10101/pm2app.git
+git push -u origin master
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs dockerfile"><code>git remote <span class="hljs-keyword">add</span><span class="bash"> origin https://github.com/e10101/pm2app.git
+</span>git push -u origin master
+</code></pre>
+<p>来完成设置。</p>
+<h3 id="articleHeader8">本地pm2的ecosystem配置</h3>
+<p>在本地的目标应用下，输入：</p>
+<div class="widget-codetool" style="display: none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="pm2 ecosystem
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs gcode"><code>p<span class="hljs-name">m2</span> ecosystem
+</code></pre>
+<p>生成pm2的部署配置模板文件如下：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="  /**
+   * Application configuration section
+   * PM2 - Application Declaration
+   */
+  apps : [
+    // First application
+    {
+      name      : &quot;API&quot;,
+      script    : &quot;app.js&quot;,
+      env: {
+        COMMON_VARIABLE: &quot;true&quot;
+      },
+      env_production : {
+        NODE_ENV: &quot;production&quot;
+      }
+    },
+    // Second application
+    {
+      name      : &quot;WEB&quot;,
+      script    : &quot;web.js&quot;
+    }
+  ],
+  /**
+   * Deployment section
+   * PM2 - Deployment
+   */
+  deploy : {
+    production : {
+      user : &quot;node&quot;,
+      host : &quot;212.83.163.1&quot;,
+      ref  : &quot;origin/master&quot;,
+      repo : &quot;git@github.com:repo.git&quot;,
+      path : &quot;/var/www/production&quot;,
+      &quot;post-deploy&quot; : &quot;npm install &amp;&amp; pm2 startOrRestart ecosystem.json --env production&quot;
+    },
+    dev : {
+      user : &quot;node&quot;,
+      host : &quot;212.83.163.1&quot;,
+      ref  : &quot;origin/master&quot;,
+      repo : &quot;git@github.com:repo.git&quot;,
+      path : &quot;/var/www/development&quot;,
+      &quot;post-deploy&quot; : &quot;npm install &amp;&amp; pm2 startOrRestart ecosystem.json --env dev&quot;,
+      env  : {
+        NODE_ENV: &quot;dev&quot;
+      }
+    }
+  }
+}" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs less"><code>  <span class="hljs-comment">/**
+   * Application configuration section
+   * PM2 - Application Declaration
+   */</span>
+  <span class="hljs-attribute">apps </span>: [
+    <span class="hljs-comment">// First application</span>
+    {
+      <span class="hljs-attribute">name      </span>: <span class="hljs-string">"API"</span>,
+      <span class="hljs-attribute">script    </span>: <span class="hljs-string">"app.js"</span>,
+      <span class="hljs-attribute">env</span>: {
+        <span class="hljs-attribute">COMMON_VARIABLE</span>: <span class="hljs-string">"true"</span>
+      },
+      <span class="hljs-attribute">env_production </span>: {
+        <span class="hljs-attribute">NODE_ENV</span>: <span class="hljs-string">"production"</span>
+      }
+    },
+    <span class="hljs-comment">// Second application</span>
+    {
+      <span class="hljs-attribute">name      </span>: <span class="hljs-string">"WEB"</span>,
+      <span class="hljs-attribute">script    </span>: <span class="hljs-string">"web.js"</span>
+    }
+  ],
+  <span class="hljs-comment">/**
+   * Deployment section
+   * PM2 - Deployment
+   */</span>
+  <span class="hljs-attribute">deploy </span>: {
+    <span class="hljs-attribute">production </span>: {
+      <span class="hljs-attribute">user </span>: <span class="hljs-string">"node"</span>,
+      <span class="hljs-attribute">host </span>: <span class="hljs-string">"212.83.163.1"</span>,
+      <span class="hljs-attribute">ref  </span>: <span class="hljs-string">"origin/master"</span>,
+      <span class="hljs-attribute">repo </span>: <span class="hljs-string">"git@github.com:repo.git"</span>,
+      <span class="hljs-attribute">path </span>: <span class="hljs-string">"/var/www/production"</span>,
+      <span class="hljs-string">"post-deploy"</span> : <span class="hljs-string">"npm install &amp;&amp; pm2 startOrRestart ecosystem.json --env production"</span>
+    },
+    <span class="hljs-attribute">dev </span>: {
+      <span class="hljs-attribute">user </span>: <span class="hljs-string">"node"</span>,
+      <span class="hljs-attribute">host </span>: <span class="hljs-string">"212.83.163.1"</span>,
+      <span class="hljs-attribute">ref  </span>: <span class="hljs-string">"origin/master"</span>,
+      <span class="hljs-attribute">repo </span>: <span class="hljs-string">"git@github.com:repo.git"</span>,
+      <span class="hljs-attribute">path </span>: <span class="hljs-string">"/var/www/development"</span>,
+      <span class="hljs-string">"post-deploy"</span> : <span class="hljs-string">"npm install &amp;&amp; pm2 startOrRestart ecosystem.json --env dev"</span>,
+      <span class="hljs-attribute">env  </span>: {
+        <span class="hljs-attribute">NODE_ENV</span>: <span class="hljs-string">"dev"</span>
+      }
+    }
+  }
+}</code></pre>
+<p>应为目前我们仅部署一个应用，因此，先把不必要的信息删除，即删除apps部分的第二项。同时把我们的目标文件改为你应用的入口文件，此处修改为Express.js的默认设置，即：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="script    : &quot;./bin/www&quot;,
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs applescript"><code><span class="hljs-keyword">script</span>    : <span class="hljs-string">"./bin/www"</span>,
+</code></pre>
+<p>apps部分就设置完毕了，然后再设置deploy部分。其中production用于生产环境，dev用于开发环境，为了演示，我们只设置production部分。</p>
+<p>下面依次介绍各个设置：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="    production : {
+      user : &quot;登录远程服务器的用户名，此处填写我们创建的yishi&quot;,
+      host : &quot;远程服务器的IP或hostname，此处可以是数组同步部署多个服务器，不过鉴于我们只有一个服务器，因此我们填写123.57.205.23&quot;,
+      ref  : &quot;远端名称及分支名，此处填写origin/master&quot;,
+      repo : &quot;git仓库地址，此处填写git@github.com:e10101/pm2app.git&quot;,
+      path : &quot;远程服务器部署目录，需要填写user具备写入权限的目录，此处填写/home/yishi/www/production&quot;,
+      &quot;post-deploy&quot; : &quot;部署后需要执行的命令，此处填写npm install &amp;&amp; pm2 startOrRestart ecosystem.json --env production&quot;
+    }," title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs groovy"><code>    <span class="hljs-string">production :</span> {
+      <span class="hljs-string">user :</span> <span class="hljs-string">"登录远程服务器的用户名，此处填写我们创建的yishi"</span>,
+      <span class="hljs-string">host :</span> <span class="hljs-string">"远程服务器的IP或hostname，此处可以是数组同步部署多个服务器，不过鉴于我们只有一个服务器，因此我们填写123.57.205.23"</span>,
+      <span class="hljs-string">ref  :</span> <span class="hljs-string">"远端名称及分支名，此处填写origin/master"</span>,
+      <span class="hljs-string">repo :</span> <span class="hljs-string">"git仓库地址，此处填写git@github.com:e10101/pm2app.git"</span>,
+      <span class="hljs-string">path :</span> <span class="hljs-string">"远程服务器部署目录，需要填写user具备写入权限的目录，此处填写/home/yishi/www/production"</span>,
+      <span class="hljs-string">"post-deploy"</span> : <span class="hljs-string">"部署后需要执行的命令，此处填写npm install &amp;&amp; pm2 startOrRestart ecosystem.json --env production"</span>
+    },</code></pre>
+<p>整理后，按照我们的设置，应为：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="production: {
+  user: &quot;yishi&quot;,
+  host: &quot;123.57.205.23&quot;,
+  ref: &quot;origin/master&quot;,
+  repo: &quot;git@github.com:e10101/pm2app.git&quot;,
+  path: &quot;/home/yishi/www/production&quot;,
+  &quot;post-deploy&quot;: &quot;npm install &amp;&amp; pm2 startOrRestart ecosystem.json --env production&quot;
+}," title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs dts"><code><span class="hljs-symbol">production:</span> {
+<span class="hljs-symbol">  user:</span> <span class="hljs-string">"yishi"</span>,
+<span class="hljs-symbol">  host:</span> <span class="hljs-string">"123.57.205.23"</span>,
+<span class="hljs-symbol">  ref:</span> <span class="hljs-string">"origin/master"</span>,
+<span class="hljs-symbol">  repo:</span> <span class="hljs-string">"git@github.com:e10101/pm2app.git"</span>,
+<span class="hljs-symbol">  path:</span> <span class="hljs-string">"/home/yishi/www/production"</span>,
+  <span class="hljs-string">"post-deploy"</span>: <span class="hljs-string">"npm install &amp;&amp; pm2 startOrRestart ecosystem.json --env production"</span>
+},</code></pre>
+<p>因为pm2的部署是通过ssh进行的，因此需要开通本地到远程服务器的无密码登录，同样，在Mac下，通过ssh-keygen生成RSA公钥，并拷贝到远程服务器：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="scp ~/.ssh/id_rsa.pub yishi@123.57.205.23:/home/yishi/.ssh/authorized_keys
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs elixir"><code>scp ~<span class="hljs-regexp">/.ssh/id</span>_rsa.pub yishi<span class="hljs-variable">@123</span>.<span class="hljs-number">57.205</span>.<span class="hljs-number">23</span><span class="hljs-symbol">:/home/yishi/</span>.ssh/authorized_keys
+</code></pre>
+<p>上述命令中的yishi为用户名，执行时需要替换为你设置的用户名。</p>
+<p>设置ssh完毕后，再看看整理完毕的ecosystem配置文件，如下：</p>
+<div class="widget-codetool" style="display: none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="{
+  /**
+   * Application configuration section
+   * PM2 - Application Declaration
+   */
+  apps : [
+    // First application
+    {
+      name      : &quot;pm2app&quot;,
+      script    : &quot;./bin/www&quot;,
+      env: {
+        COMMON_VARIABLE: &quot;true&quot;
+      },
+      env_production : {
+        NODE_ENV: &quot;production&quot;
+      }
+    }
+  ],
+  /**
+   * Deployment section
+   * PM2 - Deployment
+   */
+  deploy : {
+    production : {
+      user: &quot;yishi&quot;,
+      host: &quot;123.57.205.23&quot;,
+      ref: &quot;origin/master&quot;,
+      repo: &quot;git@github.com:e10101/pm2app.git&quot;,
+      path: &quot;/home/yishi/www/production&quot;,
+      &quot;post-deploy&quot;: &quot;npm install &amp;&amp; pm2 startOrRestart ecosystem.json --env production&quot;
+    }
+  }
+}" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs less"><code>{
+  <span class="hljs-comment">/**
+   * Application configuration section
+   * PM2 - Application Declaration
+   */</span>
+  <span class="hljs-attribute">apps </span>: [
+    <span class="hljs-comment">// First application</span>
+    {
+      <span class="hljs-attribute">name      </span>: <span class="hljs-string">"pm2app"</span>,
+      <span class="hljs-attribute">script    </span>: <span class="hljs-string">"./bin/www"</span>,
+      <span class="hljs-attribute">env</span>: {
+        <span class="hljs-attribute">COMMON_VARIABLE</span>: <span class="hljs-string">"true"</span>
+      },
+      <span class="hljs-attribute">env_production </span>: {
+        <span class="hljs-attribute">NODE_ENV</span>: <span class="hljs-string">"production"</span>
+      }
+    }
+  ],
+  <span class="hljs-comment">/**
+   * Deployment section
+   * PM2 - Deployment
+   */</span>
+  <span class="hljs-attribute">deploy </span>: {
+    <span class="hljs-attribute">production </span>: {
+      <span class="hljs-attribute">user</span>: <span class="hljs-string">"yishi"</span>,
+      <span class="hljs-attribute">host</span>: <span class="hljs-string">"123.57.205.23"</span>,
+      <span class="hljs-attribute">ref</span>: <span class="hljs-string">"origin/master"</span>,
+      <span class="hljs-attribute">repo</span>: <span class="hljs-string">"git@github.com:e10101/pm2app.git"</span>,
+      <span class="hljs-attribute">path</span>: <span class="hljs-string">"/home/yishi/www/production"</span>,
+      <span class="hljs-string">"post-deploy"</span>: <span class="hljs-string">"npm install &amp;&amp; pm2 startOrRestart ecosystem.json --env production"</span>
+    }
+  }
+}</code></pre>
+<p>在本地应用目录下，执行pm2 deploy命令：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="pm2 deploy ecosystem.json production setup
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs stylus"><code>pm2 deploy ecosystem<span class="hljs-selector-class">.json</span> production setup
+</code></pre>
+<p>提示错误：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="Host key verification failed.
+fatal: Could not read from remote repository.
+Please make sure you have the correct access rights and the repository exists.
+  failed to clone
+Deploy failed" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs livecodeserver"><code>Host key verification failed.
+fatal: Could <span class="hljs-keyword">not</span> <span class="hljs-built_in">read</span> <span class="hljs-built_in">from</span> remote repository.
+Please make sure you have <span class="hljs-keyword">the</span> correct access rights <span class="hljs-keyword">and</span> <span class="hljs-keyword">the</span> repository exists.
+  failed <span class="hljs-built_in">to</span> clone
+Deploy failed</code></pre>
+<p>此时主要是在远程服务器中，并未将<a href="http://github.com/" target="_blank">http://github.com</a>加入known_hosts，在服务器端通过如下命令设置：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="ssh-keyscan -t rsa github.com &gt;&gt; ~/.ssh/known_hosts
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs ruby"><code>ssh-keyscan -t rsa github.com <span class="hljs-meta">&gt;&gt; </span>~<span class="hljs-regexp">/.ssh/known</span>_hosts
+</code></pre>
+<p>在本地继续执行部署命令：</p>
+<div class="widget-codetool" style="display: none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="pm2 deploy ecosystem.json production setup
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs stylus"><code>pm2 deploy ecosystem<span class="hljs-selector-class">.json</span> production setup
+</code></pre>
+<p>此时，如无其他问题，输出应提示：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="  ○ setup complete
+--&gt; Success" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs ada"><code>  ○ setup complete
+<span class="hljs-comment">--&gt; Success</span></code></pre>
+<p>至此，pm2的部署设置完毕。</p>
+<h3 id="articleHeader9">pm2部署</h3>
+<p>pm2的部署设置完毕后，接下来就是实际部署了。</p>
+<p>在部署前，现将本地代码修改并进行git提交：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="git add .
+git commit -m &quot;update ecosystem&quot;
+git push
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs dockerfile"><code>git <span class="hljs-keyword">add</span><span class="bash"> .
+</span>git commit -m <span class="hljs-string">"update ecosystem"</span>
+git push
+</code></pre>
+<p>提交后，在本地应用目录，输入如下命令进行生产环境的部署：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="pm2 deploy ecosystem.json production
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs stylus"><code>pm2 deploy ecosystem<span class="hljs-selector-class">.json</span> production
+</code></pre>
+<p>可以看到如下输出：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="[PM2][WARN] Applications pm2app not running, starting...
+[PM2] App [pm2app] launched (1 instances)
+┌──────────┬────┬──────┬──────┬────────┬─────────┬────────┬─────────────┬──────────┐
+│ App name │ id │ mode │ pid  │ status │ restart │ uptime │ memory      │ watching │
+├──────────┼────┼──────┼──────┼────────┼─────────┼────────┼─────────────┼──────────┤
+│ pm2app   │ 0  │ fork │ 1028 │ online │ 0       │ 0s     │ 11.246 MB   │ disabled │
+└──────────┴────┴──────┴──────┴────────┴─────────┴────────┴─────────────┴──────────┘
+ Use `pm2 show &lt;id|name&gt;` to get more details about an app
+  ○ hook test
+  ○ successfully deployed origin/master
+--&gt; Success" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs markdown"><code>[<span class="hljs-string">PM2</span>][<span class="hljs-symbol">WARN</span>] Applications pm2app not running, starting...
+[PM2] App [pm2app] launched (1 instances)
+┌──────────┬────┬──────┬──────┬────────┬─────────┬────────┬─────────────┬──────────┐
+│ App name │ id │ mode │ pid  │ status │ restart │ uptime │ memory      │ watching │
+├──────────┼────┼──────┼──────┼────────┼─────────┼────────┼─────────────┼──────────┤
+│ pm2app   │ 0  │ fork │ 1028 │ online │ 0       │ 0s     │ 11.246 MB   │ disabled │
+└──────────┴────┴──────┴──────┴────────┴─────────┴────────┴─────────────┴──────────┘
+ Use <span class="hljs-code">`pm2 show &lt;id|name&gt;`</span> to get more details about an app
+  ○ hook test
+  ○ successfully deployed origin/master
+--&gt; Success</code></pre>
+<p>部署成功，在远程服务器查看端口情况：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="netstat -antp
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs ebnf"><code><span class="hljs-attribute">netstat -antp</span>
+</code></pre>
+<p>可以看到应用默认部署的3000端口已经开放了。通过浏览器打开：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="http://123.57.205.23:3000/
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs dts"><code><span class="hljs-symbol">http:</span><span class="hljs-comment">//123.57.205.23:3000/</span>
+</code></pre>
+<p>可以看到部署的Web应用可以访问了。（如果netstat -antp中可见3000端口可访问，可以检查下ECS的防火墙设置，确保3000端口对外开放）</p>
+<h3 id="articleHeader10">pm2其他命令</h3>
+<p>应用列表：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="pm2 list
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs applescript"><code>pm2 <span class="hljs-built_in">list</span>
+</code></pre>
+<p>应用信息（查看应用编号为0的信息）：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="pm2 show 0 
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs gauss"><code>pm2 <span class="hljs-keyword">show</span> <span class="hljs-number">0</span> 
+</code></pre>
+<h3 id="articleHeader11">（重要）服务器端设置pm2开机自动启动</h3>
+<p>开启启动设置，此处是CentOS系统，其他系统替换最后一个选项（可选项：ubuntu, centos, redhat, gentoo, systemd, darwin, amazon）：</p>
+<div class="widget-codetool" style="display: none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="pm2 startup centos
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs nginx"><code><span class="hljs-attribute">pm2</span> startup centos
+</code></pre>
+<p>然后按照提示需要输入的命令进行输入：</p>
+<div class="widget-codetool" style="display: none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="sudo su -c &quot;env PATH=$PATH:/usr/bin pm2 startup centos -u yishi --hp /home/yishi&quot;
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs nginx"><code><span class="hljs-attribute">sudo</span> su -c <span class="hljs-string">"env PATH=<span class="hljs-variable">$PATH</span>:/usr/bin pm2 startup centos -u yishi --hp /home/yishi"</span>
+</code></pre>
+<p>保存pm2设置</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="pm2 save
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs fortran"><code>pm2 <span class="hljs-keyword">save</span>
+</code></pre>
+<p>现在重新启动系统，测试是否可以开机启动：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="sudo reboot
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs ebnf"><code><span class="hljs-attribute">sudo reboot</span>
+</code></pre>
+<p>等系统重启后，通过浏览器检查系统是否自动启动：</p>
+<div class="widget-codetool" style="display:none;">
+      <div class="widget-codetool--inner">
+      <span class="selectCode code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="全选"></span>
+      <span type="button" class="copyCode code-tool" data-toggle="tooltip" data-placement="top" data-clipboard-text="http://123.57.205.23:3000/
+" title="" data-original-title="复制"></span>
+      <span type="button" class="saveToNote code-tool" data-toggle="tooltip" data-placement="top" title="" data-original-title="放进笔记"></span>
+      </div>
+      </div><pre class="hljs dts"><code><span class="hljs-symbol">http:</span><span class="hljs-comment">//123.57.205.23:3000/</span>
+</code></pre>
+<p>如果启动正常，说明设置成功！</p>
+<p>以上就是如何通过pm2部署Node应用到服务器生成环境的总结。</p>
+<h3 id="articleHeader12">参考</h3>
+<p>参考部分包含了一些先关链接，详见我的知乎专栏此：</p>
+<blockquote><p>作者：郭一实<br>链接：<a href="https://zhuanlan.zhihu.com/p/20940096" target="_blank">https://zhuanlan.zhihu.com/p/20940096</a><br>来源：知乎</p></blockquote>
+
+                </div>
+                                                
+                <div class="clearfix mt10">
+                    <ul class="article-operation list-inline pull-left"><li><a href="https://segmentfault.com/a/1190000005171229">2016年05月21日发布</a></li><li class="dropdown js__content-ops" data-module="article" data-id="1190000005171229" data-typetext="文章"><a href="javascript:void(0);" class="dropdown-toggle text-muted" data-toggle="dropdown"><i class="fa fa-ellipsis-h" aria-hidden="true"></i></a><ul class="dropdown-menu dropdown-menu-left"><li><a href="#911" data-toggle="modal" data-target="#911" data-action="report">举报</a></li></ul></li></ul>
+                    <div class="pull-right">
+                        <div class="widget-share__full" data-text="通过Github与PM2部署Node应用" data-url="https://segmentfault.com/a/1190000005171229" data-shorturl="http://sfau.lt/b5vRq5"><div class="widget-share-network sharer-0" style="display: block;"><ul class="sn-inline"><li data-network="weibo"><a href="javascript:void(0);" class="entypo-weibo icon-sn-weibo share-1" data-toggle="tooltip" data-placement="top" title="" data-original-title="分享至新浪微博">新浪微博</a></li><li data-network="wechart"><a href="javascript:void(0);" class="entypo-wechart icon-sn-weixin share-2" data-toggle="tooltip" data-placement="top" title="" data-original-title="分享至微信">微信</a></li><li data-network="twitter"><a href="javascript:void(0);" class="entypo-twitter icon-sn-twitter share-3" data-toggle="tooltip" data-placement="top" title="" data-original-title="分享至 Twitter">Twitter</a></li><li data-network="facebook"><a href="javascript:void(0);" class="entypo-facebook icon-sn-facebook share-4" data-toggle="tooltip" data-placement="top" title="" data-original-title="分享至 Facebook">Facebook</a></li></ul></div><a type="button" class="btn btn-sm shareMore btn-sn-more" data-toggle="popover" data-placement="top" data-url="https://segmentfault.com/a/1190000005171229" data-shorturl="http://sfau.lt/b5vRq5"><span class="icon-sn-dotted" data-original-title="" title=""></span><strong class="visible-xs-inline">•••</strong></a></div>
+
+
+                    </div>
+                </div>
+                <div class="mt10 text-center"><button type="button" id="mainLike" data-id="1190000005171229" class="btn btn-success btn-lg mr15 "><i class="fa fa-caret-up fa-lg" aria-hidden="true"></i>&nbsp;&nbsp;<span class="seprator">|</span>&nbsp;&nbsp;
+                                <span id="mainLikeNum">1 </span></button><button type="button" id="mainBookmark" data-type="article" data-id="1190000005171229" class="btn btn-default btn-lg "><span id="mainBookmarkText">收藏</span>&nbsp;&nbsp;<span class="seprator">|</span>&nbsp;&nbsp;<span id="mainBookmarkNum">20</span></button></div>
+                                    <div class="recommend-post pt30 mt40 mb30 border-top">
+                        <div class="row">
+                            <div class="col-md-8">
+                                                                    <h4 class="mt0">你可能感兴趣的文章</h4>
+                                    <ul class="widget-links list-unstyled">
+                                                                                    <li class="widget-links__item">
+                                                <a href="https://segmentfault.com/a/1190000010296077" title="微信小程序server-1-搭建HTTPS server">微信小程序server-1-搭建HTTPS server</a>
+                                                <small class="text-muted">
+                                                    3 收藏，116
+                                                    浏览
+                                                </small>
+                                            </li>
+                                                                                    <li class="widget-links__item">
+                                                <a href="https://segmentfault.com/a/1190000009676923" title="Node连接Mysql遇到的坑以及踩坑总结">Node连接Mysql遇到的坑以及踩坑总结</a>
+                                                <small class="text-muted">
+                                                    1 收藏，594
+                                                    浏览
+                                                </small>
+                                            </li>
+                                                                                    <li class="widget-links__item">
+                                                <a href="https://segmentfault.com/a/1190000005721157" title="vps安装firekylin博客系统">vps安装firekylin博客系统</a>
+                                                <small class="text-muted">
+                                                    687
+                                                    浏览
+                                                </small>
+                                            </li>
+                                                                            </ul>
+                                                            </div>
+                            <div class="col-md-4">
+                                                                    <div class="article-license">
+                                                                                                                            <img class="mb5" src="%E9%80%9A%E8%BF%87Github%E4%B8%8EPM2%E9%83%A8%E7%BD%B2Node%E5%BA%94%E7%94%A8%20-%20%E4%B8%9A%E4%BD%99%E7%A8%8B%E5%BA%8F%E5%91%98%20-%20SegmentFault_files/creativecommons-sa.svg" height="24"><br>
+                                                                                                                        <div class="license-item text-muted">
+                                            本作品采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank" class="alert-link">知识共享署名-非商业性使用-相同方式共享 4.0 国际许可协议</a> 进行许可
+                                            。
+                                        </div>
+                                        
+                                    </div>
+                                                            </div>
+                        </div>
+
+                    </div>
+                                <!-- <ul class="list-unstyled text-muted mt30">
+                                                            <li class="mt5">下一篇：<a href="/a/1190000005269103">Jade结合CKEditor进行可视化编辑</a></li>
+                                    </ul> -->
+
+                <h2 class="h4 post-comment-title"></h2>
+                        <div class="comments--news comments--default comments--article" data-id="1190000005171229" data-user-id="" data-author-id="1030000005171162 " data-is-admin="null">
+                    <div class="mb10 clearfix">
+                <strong class="comments-stat pull-left mr10">3 条评论</strong>
+
+                                                    <div class="btn-group btn-group-xs pull-right comments-sort btn-group-menu" role="menu">
+                        <a href="javascript:;" class="btn btn-default active" data-sort="default">默认排序</a>
+                        <a href="javascript:;" class="btn btn-default" data-sort="desc">时间排序</a>
+                    </div>
+                            </div>
+                <div class="comments-container">
+                                <div class="comments-list">
+                <div class="comments-item" data-id="1050000006734314">
+            <div class="pull-left">
+                <a href="https://segmentfault.com/u/alouha" target="_blank"><img class="avatar-32 " src="%E9%80%9A%E8%BF%87Github%E4%B8%8EPM2%E9%83%A8%E7%BD%B2Node%E5%BA%94%E7%94%A8%20-%20%E4%B8%9A%E4%BD%99%E7%A8%8B%E5%BA%8F%E5%91%98%20-%20SegmentFault_files/user-64.png" alt=""></a>
+            </div>
+            <div class="comments-content">
+                <div class="comment-trigger">
+                    <div class="pull-right comment-option">
+                        <a href="#911" class="ml10" data-toggle="modal" data-target="#911" data-action="report" data-action-text="举报" data-module="comment" data-id="1050000006734314" data-typetext="评论" data-placement="top" title="举报"><span class="glyphicon glyphicon-flag" aria-hidden="true"></span></a>
+                                            </div>
+                    <strong><a target="_blank" href="https://segmentfault.com/u/alouha">alouha</a></strong>
+                    <span class="comments-isAuthor hide"></span>
+                    <span class="comments-date">  ·  2016年08月27日</span>
+                </div>
+
+                <div class="fmt mb10"><p>本地开发环境配置是否可以贴出来？</p></div>
+
+                <p class="comment-ops not-reply">
+                    <span class="comments-zan ">
+                        <i class="fa fa-thumbs-up mr4" aria-hidden="true"></i>
+                        <span class="comments-zan-text">赞</span>
+                        <span class="comments-zan-value"></span>
+                    </span>
+                    <span class="ml15 comments-reply-btn">回复</span>
+                </p>
+
+                <div class="reply-list reply-list--empty">
+
+                    
+                    <div class="reply-item reply-item--ops">
+                        <a class="reply-inner-btn" href="javascript:;">添加回复</a>
+                        
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+                <div class="comments-item" data-id="1050000009444347">
+            <div class="pull-left">
+                <a href="https://segmentfault.com/u/leoskey" target="_blank"><img class="avatar-32 " src="%E9%80%9A%E8%BF%87Github%E4%B8%8EPM2%E9%83%A8%E7%BD%B2Node%E5%BA%94%E7%94%A8%20-%20%E4%B8%9A%E4%BD%99%E7%A8%8B%E5%BA%8F%E5%91%98%20-%20SegmentFault_files/2341669971-55dd94b17f1c4_big64.jpg" alt=""></a>
+            </div>
+            <div class="comments-content">
+                <div class="comment-trigger">
+                    <div class="pull-right comment-option">
+                        <a href="#911" class="ml10" data-toggle="modal" data-target="#911" data-action="report" data-action-text="举报" data-module="comment" data-id="1050000009444347" data-typetext="评论" data-placement="top" title="举报"><span class="glyphicon glyphicon-flag" aria-hidden="true"></span></a>
+                                            </div>
+                    <strong><a target="_blank" href="https://segmentfault.com/u/leoskey">leoskey</a></strong>
+                    <span class="comments-isAuthor hide"></span>
+                    <span class="comments-date">  ·  5月17日</span>
+                </div>
+
+                <div class="fmt mb10">
+<p>执行这步的时候发生了一个错误</p>
+<pre><code>pm2 deploy ecosystem.config.js production
+--&gt; Deploying to production environment
+  ○ deploying origin/master
+  ○ executing pre-deploy-local
+  ○ hook pre-deploy
+  ○ fetching updates
+Fetching origin
+  ○ resetting HEAD to origin/master
+  ○ executing post-deploy `npm install &amp;&amp; pm2 startOrRestart ecosystem.config.js --env production`
+[PM2][ERROR] File ecosystem.config.js not found
+
+  post-deploy hook failed
+
+Deploy failed</code></pre>
+<p>ecosystem.config需要放置在服务器吗？</p>
+</div>
+
+                <p class="comment-ops not-reply">
+                    <span class="comments-zan ">
+                        <i class="fa fa-thumbs-up mr4" aria-hidden="true"></i>
+                        <span class="comments-zan-text">赞</span>
+                        <span class="comments-zan-value"></span>
+                    </span>
+                    <span class="ml15 comments-reply-btn">回复</span>
+                </p>
+
+                <div class="reply-list reply-list--empty">
+
+                    
+                    <div class="reply-item reply-item--ops">
+                        <a class="reply-inner-btn" href="javascript:;">添加回复</a>
+                        
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+                <div class="comments-item" data-id="1050000010210694">
+            <div class="pull-left">
+                <a href="https://segmentfault.com/u/598220654" target="_blank"><img class="avatar-32 " src="%E9%80%9A%E8%BF%87Github%E4%B8%8EPM2%E9%83%A8%E7%BD%B2Node%E5%BA%94%E7%94%A8%20-%20%E4%B8%9A%E4%BD%99%E7%A8%8B%E5%BA%8F%E5%91%98%20-%20SegmentFault_files/2415628721-595cea4847ee9_big64.jpg" alt=""></a>
+            </div>
+            <div class="comments-content">
+                <div class="comment-trigger">
+                    <div class="pull-right comment-option">
+                        <a href="#911" class="ml10" data-toggle="modal" data-target="#911" data-action="report" data-action-text="举报" data-module="comment" data-id="1050000010210694" data-typetext="评论" data-placement="top" title="举报"><span class="glyphicon glyphicon-flag" aria-hidden="true"></span></a>
+                                            </div>
+                    <strong><a target="_blank" href="https://segmentfault.com/u/598220654">King</a></strong>
+                    <span class="comments-isAuthor hide"></span>
+                    <span class="comments-date">  ·  7月16日</span>
+                </div>
+
+                <div class="fmt mb10"><p>我windows 用git推送到服务器,为什么要输入三次服务器的密码?楼主有没有遇到这个问题!</p></div>
+
+                <p class="comment-ops not-reply">
+                    <span class="comments-zan ">
+                        <i class="fa fa-thumbs-up mr4" aria-hidden="true"></i>
+                        <span class="comments-zan-text">赞</span>
+                        <span class="comments-zan-value"></span>
+                    </span>
+                    <span class="ml15 comments-reply-btn">回复</span>
+                </p>
+
+                <div class="reply-list reply-list--empty">
+
+                    
+                    <div class="reply-item reply-item--ops">
+                        <a class="reply-inner-btn" href="javascript:;">添加回复</a>
+                        
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+            </div>
+    <div class="comments-loading hide">载入中...</div>
+        <div class="comments-more hide"><a href="javascript:;">显示更多评论</a></div>
+    
+                        <div class="comments-box">
+                <div class="pull-left">
+                    <img class="avatar-32 " src="%E9%80%9A%E8%BF%87Github%E4%B8%8EPM2%E9%83%A8%E7%BD%B2Node%E5%BA%94%E7%94%A8%20-%20%E4%B8%9A%E4%BD%99%E7%A8%8B%E5%BA%8F%E5%91%98%20-%20SegmentFault_files/user-128.png" alt="">
+                </div>
+                <div class="comments-box-content">
+                    <form action="/api/article/1190000005171229/comments/add">
+                        <div class="form-group mb0">
+                                            <textarea name="text" rows="3" class="form-control" placeholder="文明社会，理性评论"></textarea>
+
+                            <div class="mt15 text-right">
+                                <button type="button" class="hide"></button>
+                                <button class=" btn btn-primary" type="button">发布评论</button>
+                            </div>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+                                </div>
+    </div>
+
+
+                                    
+                
+            </div><!-- /.main -->
+
+
+            <div class="col-xs-12 col-md-3 side">
+                                <div id="mm_124884735_33830642_120592878" style="margin-bottom: 25px"><span style="overflow: visible; position: relative; display: block; width: 255px; height: 213px; background: rgba(0, 0, 0, 0) none repeat scroll 0% 0%; border: 0px none; text-align: left;"><span style="overflow: hidden; position: absolute; display: block; width: 255px; height: 213px; background: rgba(0, 0, 0, 0) none repeat scroll 0% 0%; border: 0px none; text-align: left;"><span style="overflow: hidden; position: absolute; display: block; width: 255px; height: 213px; background: rgba(0, 0, 0, 0) none repeat scroll 0% 0%; border: 0px none; text-align: left;"><a href="https://afptrack.alimama.com/clk?bid=0a671d6100015979b7b63b6e140366b4&amp;pid=mm_124884735_33830642_120592878&amp;cid=247930&amp;mid=234752&amp;oid=33116&amp;productType=1&amp;qytInfoMTime=1501144439&amp;e=CCyTcM3FoBqGJgTPtIvipgpbCTAf57T1FP5z3VfyZHdJ%2FmSUo0ZFxZL391YztxH%2BAhjPBX0ETqGOPHD6DHXZ%2FEjsD7Kvzk3KJ4T9Srt7DL022Fn4UaNQ7w%3D%3D&amp;k=121" target="_blank" style="position: absolute; display: block; top: 0px; left: 0px; margin: 0px; padding: 0px; width: 255px; height: 213px; text-decoration: none; opacity: 0; z-index: 1; cursor: pointer; background: rgb(255, 255, 255) none repeat scroll 0% 0%;"></a><img id="ac_cs_mm_124884735_33830642_120592878_1" src="%E9%80%9A%E8%BF%87Github%E4%B8%8EPM2%E9%83%A8%E7%BD%B2Node%E5%BA%94%E7%94%A8%20-%20%E4%B8%9A%E4%BD%99%E7%A8%8B%E5%BA%8F%E5%91%98%20-%20SegmentFault_files/fb37b16e7c657de1035b5dbb0c0235d9.png" style="width: 255px; height: 213px;" border="0"></span></span></span></div>
+
+                <div class="widget-box widget-box--blog-info">
+                    <div class="blog__sidebar-author ">
+                                                    <button type="button" class="btn btn-sm btn-success follow-user ml10 pull-right" data-do="follow" data-type="user" data-id="1030000005171162">关注作者
+                            </button>
+                        
+                        <div class="article__widget--author">
+                            <a href="https://segmentfault.com/u/e10101">
+                                <img class="avatar-40" src="%E9%80%9A%E8%BF%87Github%E4%B8%8EPM2%E9%83%A8%E7%BD%B2Node%E5%BA%94%E7%94%A8%20-%20%E4%B8%9A%E4%BD%99%E7%A8%8B%E5%BA%8F%E5%91%98%20-%20SegmentFault_files/453230058-573ffdd5eef2b_big64.png" alt="e10101">
+                            </a>
+                            <a class="article__widget-author-name" href="https://segmentfault.com/u/e10101">
+                                <strong>e10101</strong>
+                            </a>
+                            <p class="article__widget-author-text-muted mb0">
+                                <span>209 声望</span>
+
+                            </p>
+
+
+                        </div>
+
+
+                    </div>
+                                        <div class="blog__sidebar-blog-name">
+                        <p class="article__widget-author-text-muted mt15 mb5">发布于专栏</p>
+
+                        <h4 class="fz16"><a href="https://segmentfault.com/blog/ys">业余程序员</a></h4>
+                        <p class="article__widget-author-desc">业余程序员的随笔</p>
+
+                        <p>
+                            <span class="article__widget-author-text-muted">4 人关注</span>
+                            
+                                                                    <button type="button mb20" class="btn btn-sm btn-default follow-article pull-right" data-do="follow" data-type="blog" data-id="1200000005171176">关注专栏
+                                    </button>
+                                
+                                                    </p>
+
+                    </div>
+                    
+
+                </div>
+                
+                                <div id="mm_124884735_33830642_121788665" style="margin-bottom: 25px"><div id="ac_wrap_mm_124884735_33830642_121788665" style="width:255px"><script async=""></script>
+<!-- 文章页右侧边栏方块 -->
+<ins class="adsbygoogle" style="display:inline-block;width:250px;height:250px" data-ad-client="ca-pub-6330872677300335" data-ad-slot="6800875204" data-adsbygoogle-status="done"><ins id="aswift_0_expand" style="display:inline-table;border:none;height:250px;margin:0;padding:0;position:relative;visibility:visible;width:250px;background-color:transparent"><ins id="aswift_0_anchor" style="display:block;border:none;height:250px;margin:0;padding:0;position:relative;visibility:visible;width:250px;background-color:transparent"><iframe marginwidth="0" marginheight="0" vspace="0" hspace="0" allowtransparency="true" scrolling="no" allowfullscreen="true" onload="var i=this.id,s=window.google_iframe_oncopy,H=s&amp;&amp;s.handlers,h=H&amp;&amp;H[i],w=this.contentWindow,d;try{d=w.document}catch(e){}if(h&amp;&amp;d&amp;&amp;(!d.body||!d.body.firstChild)){if(h.call){setTimeout(h,0)}else if(h.match){try{h=s.upd(h,i)}catch(e){}w.location.replace(h)}}" id="aswift_0" name="aswift_0" style="left:0;position:absolute;top:0;width:250px;height:250px;" height="250" frameborder="0" width="250"></iframe></ins></ins></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script><script type="text/javascript"></script><script type="text/javascript"></script><script type="text/javascript"></script><script type="text/javascript"></script><script type="text/javascript"></script></div></div>
+
+
+                 
+                <div class="post-nav hidden-xs side-outline hidden-sm" style="display: block; width: 100%; top: 0px;">
+                    <div class="panel panel-default widget-outline">
+                        <div class="panel-heading">目录</div>
+                        <div class="panel-body">
+                            <div class="nav-body" style="top: 0px;">
+                                <div class="highlight-title" style="display: none; top: 0px; height: 27px;"></div>
+                                <ul class="articleIndex"><li class=""><a href="#articleHeader0">背景</a></li><li class=""><a href="#articleHeader1">环境介绍</a></li><li class=""><a href="#articleHeader2">系统架构</a></li><li class=""><a href="#articleHeader3">服务器端安装必要的软件</a></li><li class=""><a href="#articleHeader4">（可选）服务器端创建新用户</a></li><li class=""><a href="#articleHeader5">（可选）服务器端关闭root用户的ssh访问</a></li><li class=""><a href="#articleHeader6">本地安装pm2</a></li><li class=""><a href="#articleHeader7">设置Github仓库</a></li><li class=""><a href="#articleHeader8">本地pm2的ecosystem配置</a></li><li class=""><a href="#articleHeader9">pm2部署</a></li><li class=""><a href="#articleHeader10">pm2其他命令</a></li><li class=""><a href="#articleHeader11">（重要）服务器端设置pm2开机自动启动</a></li><li><a href="#articleHeader12">参考</a></li></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- /.side -->
+        </div>
+    </div>
+</div>
+
+<div id="shareToWeiboModal" class="modal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    <span aria-hidden="true">×</span><span class="sr-only">Close</span>
+                </button>
+                <h4 class="modal-title">分享</h4>
+            </div>
+            <div class="modal-body">
+                <p class="sfModal-content">
+                    分享到微博？
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default dont-likeweibo" data-dismiss="modal">取消</button>
+                <a href="" id="shareLink" class="btn btn-primary done-btn" target="_blank" onclick="$('#shareToWeiboModal').modal('hide')">分享</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+
+<script src="%E9%80%9A%E8%BF%87Github%E4%B8%8EPM2%E9%83%A8%E7%BD%B2Node%E5%BA%94%E7%94%A8%20-%20%E4%B8%9A%E4%BD%99%E7%A8%8B%E5%BA%8F%E5%91%98%20-%20SegmentFault_files/hm.js"></script><script async="" src="%E9%80%9A%E8%BF%87Github%E4%B8%8EPM2%E9%83%A8%E7%BD%B2Node%E5%BA%94%E7%94%A8%20-%20%E4%B8%9A%E4%BD%99%E7%A8%8B%E5%BA%8F%E5%91%98%20-%20SegmentFault_files/analytics.js"></script><script type="text/template" id="regNext">
+        <div class="row flex-vertical-center">
+        <div class="col-md-12">
+            <p class="mb0" style="font-size: 14px; margin-right:50px; font-family: Source Code Pro,Consolas,Menlo,Monaco,Courier New,monospace;">
+                    &lt;space&gt; or &lt;tab&gt;，这里有和你习惯相同的程序员
+            </p>
+            <button class="btn btn-primary SFLogin mr10"
+                    onclick='ga("send", "event", "join button", "clicked", "footer welcome popup");'>投入组织怀抱
+            </button>
+            <button class="btn  btn-default  tomorrow">Python 怎么办</button>
+        </div>
+
+    </div>
+</script>
+
+<div class="widget-register widget-welcome-question mt20 hidden-xs hidden-sm widget-welcome widget-register-slideUp">
+    <div class="container">
+        <div class="row flex-vertical-center">
+            <div class="col-sm-12 col-md-8">
+                <p class="mb0">
+                                                                你好！看起来你挺喜欢这个内容，但是你还没有注册帐号。 <br><br>当你创建了帐号，我们能准确地追踪你关注的问题，在有新答案或内容的时候收到网页和邮件通知。<br>还能直接向作者咨询更多细节。如果上面的内容有帮助，记得点赞 (♥◠‿◠)ﾉ 表示感谢。
+                                    </p>
+
+            </div>
+            <div class="col-sm-12 col-lg-3 col-lg-offset-1 col-md-4">
+                <button class="btn btn-primary btn-lg SFLogin  mr10" onclick='ga("send", "event", "join button", "clicked", "footer welcome popup");'>立即注册
+                </button>
+                <button class="btn btn-lg btn-default  tomorrow">明天提醒我</button>
+            </div>
+            <div style="position: absolute;transform: scale(0.5,0.5) translate(300%,-60%);">
+                <img src="%E9%80%9A%E8%BF%87Github%E4%B8%8EPM2%E9%83%A8%E7%BD%B2Node%E5%BA%94%E7%94%A8%20-%20%E4%B8%9A%E4%BD%99%E7%A8%8B%E5%BA%8F%E5%91%98%20-%20SegmentFault_files/welcome2x.png">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal widget-911" id="911" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button class="close" data-dismiss="modal" type="button">
+          <span aria-hidden="true">×</span>
+          <span class="sr-only">Close</span>
+        </button>
+        <h4 class="modal-title"><span data-model="action"></span><span data-model="type"></span></h4>
+      </div>
+      <div class="modal-body">
+        <form id="reportForm">
+          <!-- 后台返回信息 -->
+          <p class="alert alert-warning" data-model="returnMsg"></p>
+          <div data-role="base">
+            <p>
+              <strong class="required">我要<span data-model="action"></span>该<span data-model="type"></span>，理由是：</strong>
+            </p>
+            <ul class="list-unstyled" data-model="list"></ul>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default pull-left" type="button" data-role="back" style="display:none">返回重选</button>
+                <button class="btn btn-default" data-dismiss="modal" type="button">取消</button>
+        <button class="btn btn-primary" data-role="submit" type="button">提交</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+
+<footer id="footer">
+    <div class="container">
+        <div class="row hidden-xs">
+            <dl class="col-sm-2 site-link">
+                <dt>网站相关</dt>
+                <dd><a href="https://segmentfault.com/about">关于我们</a></dd>
+                <dd><a href="https://segmentfault.com/tos">服务条款</a></dd>
+                <dd><a href="https://segmentfault.com/faq">帮助中心</a></dd>
+                <dd><a href="https://segmentfault.com/repu">声望与权限</a></dd>
+                <dd><a href="https://segmentfault.com/markdown">编辑器语法</a></dd>
+                <dd><a href="https://segmentfault.com/weekly">每周精选</a></dd>
+                <dd><a href="https://segmentfault.com/app">App 下载</a></dd>
+                <dd><a href="https://segmentfault.com/community">社区服务中心</a></dd>
+            </dl>
+            <dl class="col-sm-2 site-link">
+                <dt>联系合作</dt>
+                <dd><a href="https://segmentfault.com/contact">联系我们</a></dd>
+                <dd><a href="https://segmentfault.com/hiring">加入我们</a></dd>
+                <dd><a href="https://segmentfault.com/link">合作伙伴</a></dd>
+                <dd><a href="https://segmentfault.com/press">媒体报道</a></dd>
+                <dd><a href="https://segmentfault.com/g/1570000009280187">建议反馈</a></dd>
+                                            </dl>
+            <dl class="col-sm-2 site-link">
+                <dt>常用链接</dt>
+                                                <dd><a href="https://chrome.google.com/webstore/detail/segmentfault-%E7%AC%94%E8%AE%B0/pjklfdmleagfaekibdccmhlhellefcfo" target="_blank">笔记插件: Chrome</a></dd>
+                                                                <dd><a href="https://addons.mozilla.org/zh-CN/firefox/addon/sf-note-ext/" target="_blank">笔记插件: Firefox</a></dd>
+                                                                <dd>订阅：<a href="https://segmentfault.com/feeds">问答</a> / <a href="https://segmentfault.com/feeds/blogs">文章</a></dd>
+                                                                <dd><a href="https://mirrors.segmentfault.com/" target="_blank">文档镜像</a></dd>
+                                                                <dd><a href="https://segmentfault.com/blog/interview" target="_blank">社区访谈</a></dd>
+                                                                <dd><a href="https://segmentfault.com/d-day" target="_blank">D-DAY 技术沙龙</a></dd>
+                                                                <dd><a href="https://segmentfault.com/hackathon" target="_blank">黑客马拉松 Hackathon</a></dd>
+                                                                <dd><a href="https://namebeta.com/" target="_blank">域名搜索注册</a></dd>
+                                                                <dd><a href="https://shop165859711.taobao.com/" target="_blank">周边店铺</a></dd>
+                                            </dl>
+            <dl class="col-sm-2 site-link">
+                <dt>关注我们</dt>
+                                <dd><a href="https://github.com/SegmentFault" target="_blank">GitHub</a></dd>
+                                <dd><a href="https://twitter.com/segment_fault" target="_blank">Twitter</a></dd>
+                                <dd><a href="http://weibo.com/segmentfault" target="_blank">新浪微博</a></dd>
+                                <dd><a href="https://segmentfault.com/blog/segmentfault_team" target="_blank">团队日志</a></dd>
+                                <dd><a href="https://segmentfault.com/blog/segmentfault" target="_blank">产品技术日志</a></dd>
+                                <dd><a href="https://segmentfault.com/blog/community_admin" target="_blank">社区运营日志</a></dd>
+                                <dd><a href="https://segmentfault.com/blog/segmentfault_news" target="_blank">市场运营日志</a></dd>
+                            </dl>
+            <dl class="col-sm-4 site-link" id="license">
+                <dt>内容许可</dt>
+                <dd>除特别说明外，用户内容均采用 <a rel="license" target="_blank" href="https://creativecommons.org/licenses/by-nc-nd/4.0/">知识共享署名-非商业性使用-禁止演绎 4.0 国际许可协议</a> 进行许可
+                </dd>
+                <dd>本站由 <a target="_blank" href="https://www.upyun.com/?utm_source=segmentfault&amp;utm_medium=link&amp;utm_campaign=upyun&amp;md=segmentfault">又拍云</a> 提供 CDN 存储服务
+                </dd>
+            </dl>
+        </div>
+        <div class="copyright">
+            Copyright © 2011-2017 SegmentFault. 当前呈现版本 17.06.16<br>
+            <a href="http://www.miibeian.gov.cn/" rel="nofollow">浙ICP备 15005796号-2</a> &nbsp;
+            <a target="_blank" href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=33010602002000" rel="nofollow">浙公网安备 33010602002000号</a>
+        </div>
+        <p class="text-center">
+            <a class="js__view--selector hidden-sm hidden-md hidden-lg" data-action="mobile" href="javascript:;">移动版</a>
+            <a class="js__view--selector hidden-sm hidden-md hidden-lg" data-action="desktop" href="javascript:;">桌面版</a>
+        </p>
+    </div>
+</footer>
+
+<div id="fixedTools" class="hidden-xs hidden-sm">
+    <a id="backtop" class="border-bottom hidden" href="#">回顶部</a>
+
+    <div class="qrcodeWraper">
+        <a href="https://segmentfault.com/app#qrcode"><span class="glyphicon glyphicon-qrcode"></span></a>
+        <img id="qrcode" class="border" alt="sf-wechat" src="%E9%80%9A%E8%BF%87Github%E4%B8%8EPM2%E9%83%A8%E7%BD%B2Node%E5%BA%94%E7%94%A8%20-%20%E4%B8%9A%E4%BD%99%E7%A8%8B%E5%BA%8F%E5%91%98%20-%20SegmentFault_files/appQrcode.png">
+
+        <p class="qrcode-text">扫扫下载 App</p>
+    </div>
+</div>
+
+<script id="loginModal" type="text/template">
+    <div class="row bg-white login-modal">
+        <div class="col-md-4 col-sm-12 col-md-push-7 login-wrap">
+            <h1 class="h4 text-muted login-title">用户登录</h1>
+            <form action="/api/user/login" method="POST" role="form" class="mt30">
+                <div class="form-group">
+                    <label for="username" class="control-label">手机号 或 Email</label>
+                    <input type="text" class="form-control" name="username" required placeholder="11 位手机号 或 Email"
+                           autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label class="control-label">密码</label><span class="pull-right"><a
+                                href="/user/forgot">忘记密码</a></span>
+                    <input type="password" class="form-control" name="password" required placeholder="密码">
+                </div>
+                <div class="form-group clearfix">
+                    <div class="checkbox pull-left">
+                        <label><input name="remember" type="checkbox" value="1" checked> 记住登录状态</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary pull-right pl20 pr20"
+                            onclick='ga("send", "event", "email login button", "clicked", "login modal");'>登录
+                    </button>
+                </div>
+            </form>
+            <p class="h4 text-muted visible-xs-block h4">快速登录</p>
+            <div class="widget-login mt30">
+                <p class="text-muted mt5 mr10 pull-left hidden-xs">快速登录</p>
+                <a href="/user/oauth/google" class=""
+                   onclick='ga("send", "event", "3rd login button", "clicked", "login modal", {media: "google"});'><span
+                            class="icon-sn-google"></span> <strong class="visible-xs-inline">Google 账号</strong></a>
+                <a href="/user/oauth/github" class=""
+                   onclick='ga("send", "event", "3rd login button", "clicked", "login modal", {media: "github"});");'><span
+                            class="icon-sn-github"></span> <strong class="visible-xs-inline">Github 账号</strong></a>
+                <a href="/user/oauth/weibo" class=""
+                   onclick='ga("send", "event", "3rd login button", "clicked", "login modal", {media: "weibo"});'><span
+                            class="icon-sn-weibo"></span> <strong class="visible-xs-inline">新浪微博账号</strong></a>
+                <a href="/user/oauth/qq" class=""
+                   onclick='ga("send", "event", "3rd login button", "clicked", "login modal", {media: "qq"});'><span
+                            class="icon-sn-qq"></span> <strong class="visible-xs-inline">QQ 账号</strong></a>
+                <a href="/user/oauth/weixin" class=""
+                   onclick='ga("send", "event", "3rd login button", "clicked", "login modal", {media: "qq"});'><span
+                            class="icon-sn-weixin"></span> <strong class="visible-xs-inline">微信账号</strong></a>
+                <a href="/user/oauth/linkedin" class=""
+                   onclick='ga("send", "event", "3rd login button", "clicked", "login modal", {media: "linkedin"});'><span
+                            class="icon-sn-linkedin"></span> <strong class="visible-xs-inline">LinkedIn 账号</strong></a>
+                <span id="loginShowMore" style="cursor: pointer" class="mb5"><span class="icon-sn-dotted"></span><strong
+                            class="visible-xs-inline">•••</strong></span>
+                <a href="/user/oauth/twitter" class=" hidden"
+                   onclick='ga("send", "event", "3rd login button", "clicked", "login modal", {media: "twitter"});'><span
+                            class="icon-sn-twitter"></span> <strong class="visible-xs-inline">Twitter 账号</strong></a>
+                <a href="/user/oauth/facebook" class=" hidden"
+                   onclick='ga("send", "event", "3rd login button", "clicked", "login modal", {media: "facebook"});'><span
+                            class="icon-sn-facebook"></span> <strong class="visible-xs-inline">Facebook 账号</strong></a>
+                <a href="/user/oauth/douban" class=" hidden"
+                   onclick='ga("send", "event", "3rd login button", "clicked", "login modal", {media: "douban"});'><span
+                            class="icon-sn-douban"></span> <strong class="visible-xs-inline">豆瓣账号</strong></a>
+            </div>
+        </div>
+        <div class="login-vline hidden-xs hidden-sm"></div>
+        <div class="col-md-4 col-md-pull-3 col-sm-12 login-wrap">
+            <h1 class="h4 text-muted login-title">注册新账号</h1>
+            <form action="/api/user/phone/register" method="POST" role="form" class="mt30">
+                <div class="form-group">
+                    <label for="name" class="control-label">名字</label>
+                    <input type="text" class="form-control" name="name" required placeholder="真实姓名或常用昵称">
+                </div>
+
+
+                <div class="form-group js-register-switch-box">
+                    <div class="mb10">
+                        <label class="radio-inline">
+                            <input type="radio" name="register_type" value="phone" checked> 用手机号注册
+                        </label>
+                        <label class="radio-inline">
+                            <input type="radio" name="register_type" value="mail"> 用 Email 注册
+                        </label>
+                    </div>
+                    <div class="js-register-switch-content">
+                        <input type="phone" class="form-control mb15" name="phone" required placeholder="仅支持大陆手机号"
+                               autocomplete="off">
+                        <div class="input-group"><input name="code" type="text"
+                                                        class="form-control js-user-login__phone-code-value"
+                                                        placeholder="短信验证码">
+                            <span class="input-group-btn"><button class="btn btn-default js-user-login__phone-vaild-btn"
+                                                                  style="width:96px;" type="button">获取验证码</button></span>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="form-group">
+                    <label for="password" class="control-label">密码</label>
+                    <input type="password" class="form-control" name="password" required placeholder="不少于 6 位">
+                </div>
+                <div class="form-group" style="display:none;">
+                    <label class="required control-label">验证码</label>
+                    <input type="text" class="form-control" id="captcha" name="captcha" placeholder="请输入下方的验证码">
+                    <div class="mt10"><a id="loginReloadCaptcha" href="javascript:void(0)"><img
+                                    data-src="/user/captcha?w=240&h=50" class="captcha" width="240" height="50"/></a>
+                    </div>
+                </div>
+                <div class="form-group clearfix">
+                    <div class="checkbox pull-left">
+                        同意并接受<a href="/tos" target="_blank">《服务条款》</a>
+                    </div>
+                    <button type="submit" class="btn btn-primary pl20 pr20 pull-right"
+                            onclick='ga("send", "event", "email register button", "clicked", "login modal");'>注册
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div style="position: absolute;transform: scale(0.5,0.5) translate(136%,-114%); left: -3px;" class="hidden-xs">
+        <img src="https://static.segmentfault.com/v-59799b27/global/img/fool/login@2x.png">
+    </div>
+
+    <div class="text-center text-muted mt30">
+    </div>
+</script>
+<script id="bindPhoneModal" type="text/template">
+    <div class="bg-white bindphone-model">
+        <div class="alert alert-warning" role="alert">
+            为了保证账号安全，请先绑定手机
+        </div>
+        <div>
+            <form class="form-horizontal form__bindphone-apply" style="background-color:#fff;padding:0;">
+                <div class="form-group ">
+                    <label for="phoneNumber" class="col-sm-3 control-label required" >手机号码</label>
+                    <div class="col-sm-6">
+                        <input type="text" class="form-control bindphone--phone" id="phoneNumber" name="phone" placeholder="仅只支持大陆手机号">
+                    </div>
+                    <div class="col-sm-3"></div>
+                </div>
+                <div class="form-group">
+                    <label for="authCode" class="col-sm-3 control-label required">验证码</label>
+                    <div class="col-sm-6">
+                        <div class="input-group">
+                            <input type="text" class="form-control bindphone--code" name="code" placeholder="短信验证码">
+                            <span class="input-group-btn">
+                                <button class="btn btn-default user-bind__phone-vaild-btn" type="button">获取验证码</button>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-sm-3"></div>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</script>
+
+
+
+<script>
+    (function (w) {
+        w.SF = {
+            staticUrl: "https://static.segmentfault.com/v-59799b27"
+        };
+        w.SF.token = (function () {
+    var _i7f9b = '674'//'NA'
++//'o'
+'931'+'f06'//'g'
++'SE'//'SE'
++//'r2'
+'a7'+'1'//'Xdd'
++//'Pnv'
+'db'+'80'//'80'
++//'qKM'
+'7d9'+'bc4'//'BJ8'
++'s'//'s'
++'b'//'5'
++//'M'
+'786'+'7'//'Q'
++//'dJh'
+'a9'+//'M3u'
+'M3u'+'86'//'k7'
++'f1'//'T'
++//'LmB'
+'7', _hP19rU = [[9,11],[14,16],[20,21],[27,30]];
+
+    for (var i = 0; i < _hP19rU.length; i ++) {
+        _i7f9b = _i7f9b.substring(0, _hP19rU[i][0]) + _i7f9b.substring(_hP19rU[i][1]);
+    }
+
+    return _i7f9b;
+})();;
+    })(window);
+
+                var lock = {
+        type: "",
+        text: '',
+        table: {"ban_post":[1,"\u4f60\u5df2\u7ecf\u88ab\u7981\u8a00, \u65e0\u6cd5\u8fdb\u884c\u6b64\u64cd\u4f5c, \u5982\u6709\u7591\u4e49\u8bf7\u63d0\u4ea4\u7533\u8bc9, \u6216\u8005\u53d1\u90ae\u4ef6\u5230pr@segmentfault.com"]}
+    };
+</script>
+    <script crossorigin="" src="%E9%80%9A%E8%BF%87Github%E4%B8%8EPM2%E9%83%A8%E7%BD%B2Node%E5%BA%94%E7%94%A8%20-%20%E4%B8%9A%E4%BD%99%E7%A8%8B%E5%BA%8F%E5%91%98%20-%20SegmentFault_files/assets.js"></script>
+    <script crossorigin="" src="%E9%80%9A%E8%BF%87Github%E4%B8%8EPM2%E9%83%A8%E7%BD%B2Node%E5%BA%94%E7%94%A8%20-%20%E4%B8%9A%E4%BD%99%E7%A8%8B%E5%BA%8F%E5%91%98%20-%20SegmentFault_files/post.js"></script>
+
+
+<script>
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-918487-8']);
+    _gaq.push(['_trackPageview']);
+    (function (i, s, o, g, r, a, m) {
+        i['GoogleAnalyticsObject'] = r;
+        i[r] = i[r] || function () {
+                    (i[r].q = i[r].q || []).push(arguments)
+                }, i[r].l = 1 * new Date();
+        a = s.createElement(o),
+                m = s.getElementsByTagName(o)[0];
+        a.async = 1;
+        a.src = g;
+        m.parentNode.insertBefore(a, m)
+    })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+            
+        
+
+            
+
+    ga('create', 'UA-918487-8', 'auto', {
+        'userID'
+    : 0,
+        'createdTime'
+    : 0,
+        'now'
+    : 1501149106 });
+    ga('set', 'dimension1', 'guest');
+    ga('send', 'pageview');
+
+</script>
+
+<script>
+    var _hmt = _hmt || [];
+    (function () {
+        var hm = document.createElement("script");
+        hm.src = "//hm.baidu.com/hm.js?e23800c454aa573c0ccb16b52665ac26";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+
+
+
+     <script type="text/javascript" src="%E9%80%9A%E8%BF%87Github%E4%B8%8EPM2%E9%83%A8%E7%BD%B2Node%E5%BA%94%E7%94%A8%20-%20%E4%B8%9A%E4%BD%99%E7%A8%8B%E5%BA%8F%E5%91%98%20-%20SegmentFault_files/k.js"></script>
+    <ins id="ac_js86_mm_124884735_33830642_120592878" style="display: none;"></ins><script type="text/javascript">
+        ac_keywords_targeting="node,pm2,github,nginx,express";
+
+        _acM({
+            aid: "mm_124884735_33830642_120592878",
+            format: 1,
+            mode: 1,
+            gid: 1,
+            destid:"mm_124884735_33830642_120592878",
+            sendkeywords: 1, 
+            serverbaseurl: "afpeng.alimama.com/"
+        });
+    </script><script></script><script type="text/javascript" src="%E9%80%9A%E8%BF%87Github%E4%B8%8EPM2%E9%83%A8%E7%BD%B2Node%E5%BA%94%E7%94%A8%20-%20%E4%B8%9A%E4%BD%99%E7%A8%8B%E5%BA%8F%E5%91%98%20-%20SegmentFault_files/ex_002.js" id="ac_js86_$3443515822"></script>
+    <ins id="ac_js86_mm_124884735_33830642_121788665" style="display: none;"></ins><script type="text/javascript">
+        _acM({
+            aid: "mm_124884735_33830642_121788665",
+            format: 1,
+            mode: 1,
+            gid: 1,
+            destid:"mm_124884735_33830642_121788665",
+            sendkeywords: 0, 
+            serverbaseurl: "afpeng.alimama.com/"
+        });
+    </script><script></script><script type="text/javascript" src="%E9%80%9A%E8%BF%87Github%E4%B8%8EPM2%E9%83%A8%E7%BD%B2Node%E5%BA%94%E7%94%A8%20-%20%E4%B8%9A%E4%BD%99%E7%A8%8B%E5%BA%8F%E5%91%98%20-%20SegmentFault_files/ex.js" id="ac_js86_$269779447"></script><div id="noteWidget" class="noteWidget hidden hidden-xs">
+    <div class="noteWidget-header clearfix">
+        <h2 class="h4 pull-left">记笔记</h2>
+        <ul class="list-inline pull-right mb0">
+            <li id="noteWidgetMinimize"><span class="icon-minimize"></span></li><li id="noteWidgetZoom"><span class="icon-zoom"></span></li><li id="noteWidgetClose"><span class="icon-close"></span></li>
+        </ul>
+    </div>
+    <form method="POST" action="/api/notes/add" role="form">
+        <div class="form-group">
+            <label for="title" class="sr-only">标题</label>
+            <input value="" id="draftId" type="hidden">
+            <input name="title" data-error="" autocomplete="off" class="form-control" placeholder="笔记描述" type="text">
+        </div>
+        <div class="editor-config clearfix">
+            <select name="lang" class="form-control pull-left input-sm">
+                <optgroup label="文本语法">
+                    <option value="text" data-mode="text" selected="selected">纯文本</option>
+                    <option value="markdown" data-mode="markdown">Markdown</option>
+                    <option value="javascript" data-mode="javascript">Javascript</option>
+                    <option value="css" data-mode="css">CSS</option>
+                    <option value="html5" data-mode="htmlmixed">HTML</option>
+                    <option value="php" data-mode="php">PHP</option>
+                    <option value="python" data-mode="python">Python</option>
+                    <option value="ruby" data-mode="ruby">Ruby</option>
+                    <option value="go" data-mode="go">Go</option>
+                    <option value="c" data-mode="clike">C/C++</option>
+                    <option value="java" data-mode="java">Java</option>
+                    <option value="bash" data-mode="shell">Shell/Bash</option>
+                </optgroup>
+            </select>
+            <div class="pull-right hidden-xs">
+                <select name="indentWithTabs" class="form-control inline-block input-sm">
+                    <optgroup label="缩进模式">
+                        <option value="false" selected="selected">空格缩进</option>
+                        <option value="true">Tabs 缩进</option>
+                    </optgroup>
+                </select>
+                <select name="tabSize" class="form-control inline-block input-sm">
+                    <optgroup label="缩进大小">
+                        <option value="2">2</option>
+                        <option value="4" selected="selected">4</option>
+                    </optgroup>
+                </select>
+                <select name="lineWrap" class="form-control inline-block input-sm">
+                    <optgroup label="换行方式">
+                        <option value="true" selected="selected">自动换行</option>
+                        <option value="false">不换行</option>
+                    </optgroup>
+                </select>
+            </div>
+        </div>
+        <textarea id="codeMirror" class="form-control" style="display: none;"></textarea><div class="CodeMirror cm-s-default CodeMirror-wrap"><div style="overflow: hidden; position: relative; width: 3px; height: 0px;"><textarea style="position: absolute; padding: 0px; width: 1px; height: 1em; outline: medium none;" autocorrect="off" autocapitalize="off" spellcheck="false" tabindex="0" wrap="off"></textarea></div><div class="CodeMirror-hscrollbar" style="left: 0px;"><div style="height: 100%; min-height: 1px;"></div></div><div class="CodeMirror-vscrollbar"><div style="min-width: 1px;"></div></div><div class="CodeMirror-scrollbar-filler"></div><div class="CodeMirror-gutter-filler"></div><div class="CodeMirror-scroll" tabindex="-1" draggable="true"><div class="CodeMirror-sizer" style="margin-left: 0px;"><div style="position: relative;"><div class="CodeMirror-lines"><div style="position: relative; outline: medium none;"><div class="CodeMirror-measure"><pre><span>xxxxxxxxxx</span></pre></div><div class="CodeMirror-measure"></div><div style="position: relative; z-index: 1;"></div><div class="CodeMirror-cursors"></div><div class="CodeMirror-code"></div></div></div></div></div><div style="position: absolute; height: 30px; width: 1px;"></div><div class="CodeMirror-gutters"><div class="CodeMirror-gutter CodeMirror-linenumbers" style="width: 1px;"></div></div></div></div>
+        <div class="mt20 clearfix">
+            <div class="pull-right">
+                <span class="text-muted hidden" id="editorStatus">已保存</span>
+                <a id="dropIt" href="javascript:void(0);" class="mr10 hidden">[舍弃]</a>
+                <button data-type="note" id="publishIt2" class="btn btn-default ml10" data-id="" data-do="add" data-url="" data-text="保存私密笔记" data-name="">保存私密笔记</button>
+                <button data-type="note" id="publishIt" class="btn btn-primary ml10" data-id="" data-do="add" data-url="" data-text="保存公开笔记" data-name="">保存公开笔记</button>
+                </div>
+            </div>
+        </form></div>
+    
+<div id="atwho-container"><div id="atwho-ground-dcbdceb11501149112020"><div class="atwho-view" id="at-view-64"><ul class="atwho-view-ul"></ul></div></div></div>
+
+
+
+<iframe id="p_analyse_iframe" src="%E9%80%9A%E8%BF%87Github%E4%B8%8EPM2%E9%83%A8%E7%BD%B2Node%E5%BA%94%E7%94%A8%20-%20%E4%B8%9A%E4%BD%99%E7%A8%8B%E5%BA%8F%E5%91%98%20-%20SegmentFault_files/a.txt" style="display: none;"></iframe></body></html>

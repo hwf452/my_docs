@@ -1,0 +1,7 @@
+node_modules/
+npm-debug.log
+_book/
+demo/*/node_modules
+demo/*/npm-debug.log
+demo/*/upload-files/
+demo/upload-async/static/image/
