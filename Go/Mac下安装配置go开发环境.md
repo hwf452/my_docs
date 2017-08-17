@@ -18,3 +18,23 @@ go version
 go version go1.8.3 darwin/amd64
 表示安装完成。
 
+配置环境变量
+cd
+mkdir go
+cd go
+mkdir src pkg bin
+cd 
+vim .bash_profile
+
+在末尾加入如下：
+export GOPATH=/Users/skyinno/go
+export GOBIN=$GOPATH/bin
+export PATH=$PATH:$GOBIN
+
+保存退出。
+退出终端
+重新进入终端
+go env
+
+
+完成。

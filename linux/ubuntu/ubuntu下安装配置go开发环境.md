@@ -40,3 +40,25 @@ go version
 go version go1.8.3 darwin/amd64
 表示安装完成。
 
+配置环境变量
+sudo vim /etc/profile
+
+添加下面的内容：
+export GOPATH="/root/go"
+export GOROOT="/usr/local/go"
+export GOBIN=$GOPATH/bin
+export PATH=$GOPATH/bin:$PATH
+
+保存退出
+source /etc/profile
+
+退出终端。
+重新进入终端 
+
+go env
+
+在新建GOPATH下新建三个目录
+mkdir src pkg bin
+
+完成。
+
