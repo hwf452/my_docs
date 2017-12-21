@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh-cn"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mysql分表场景分析与简单分表操作 - 苏若年 - 博客园</title>
+<link type="text/css" rel="stylesheet" href="mysql%E5%88%86%E8%A1%A8%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%8E%E7%AE%80%E5%8D%95%E5%88%86%E8%A1%A8%E6%93%8D%E4%BD%9C%20-%20%E8%8B%8F%E8%8B%A5%E5%B9%B4%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/blog-common.css">
+<link id="MainCss" type="text/css" rel="stylesheet" href="mysql%E5%88%86%E8%A1%A8%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%8E%E7%AE%80%E5%8D%95%E5%88%86%E8%A1%A8%E6%93%8D%E4%BD%9C%20-%20%E8%8B%8F%E8%8B%A5%E5%B9%B4%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/bundle-LessIsMore.css">
+<link id="mobile-style" media="only screen and (max-width: 768px)" type="text/css" rel="stylesheet" href="mysql%E5%88%86%E8%A1%A8%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%8E%E7%AE%80%E5%8D%95%E5%88%86%E8%A1%A8%E6%93%8D%E4%BD%9C%20-%20%E8%8B%8F%E8%8B%A5%E5%B9%B4%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/bundle-LessIsMore-mobile.css">
+<link title="RSS" type="application/rss+xml" rel="alternate" href="http://www.cnblogs.com/dennisit/rss">
+<link title="RSD" type="application/rsd+xml" rel="EditURI" href="http://www.cnblogs.com/dennisit/rsd.xml">
+<link type="application/wlwmanifest+xml" rel="wlwmanifest" href="http://www.cnblogs.com/dennisit/wlwmanifest.xml">
+<script async="" src="mysql%E5%88%86%E8%A1%A8%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%8E%E7%AE%80%E5%8D%95%E5%88%86%E8%A1%A8%E6%93%8D%E4%BD%9C%20-%20%E8%8B%8F%E8%8B%A5%E5%B9%B4%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/analytics.js"></script><script type="text/javascript" src="mysql%E5%88%86%E8%A1%A8%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%8E%E7%AE%80%E5%8D%95%E5%88%86%E8%A1%A8%E6%93%8D%E4%BD%9C%20-%20%E8%8B%8F%E8%8B%A5%E5%B9%B4%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/encoder.js"></script><script src="mysql%E5%88%86%E8%A1%A8%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%8E%E7%AE%80%E5%8D%95%E5%88%86%E8%A1%A8%E6%93%8D%E4%BD%9C%20-%20%E8%8B%8F%E8%8B%A5%E5%B9%B4%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/jquery.js" type="text/javascript"></script>  
+<script type="text/javascript">var currentBlogApp = 'dennisit', cb_enable_mathjax=false;var isLogined=false;</script>
+<script src="mysql%E5%88%86%E8%A1%A8%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%8E%E7%AE%80%E5%8D%95%E5%88%86%E8%A1%A8%E6%93%8D%E4%BD%9C%20-%20%E8%8B%8F%E8%8B%A5%E5%B9%B4%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/blog-common.js" type="text/javascript"></script>
+</head>
+<body>
+<a name="top"></a>
+<!--PageBeginHtml Block Begin-->
+<input value="7fa215c9efebb3811a7ef58409907899" type="hidden">
+<!--PageBeginHtml Block End-->
+
+<div id="home">
+<div id="header">
+	<div id="blogTitle">
+		
+<!--done-->
+<div class="title"><a id="Header1_HeaderTitle" class="headermaintitle" href="http://www.cnblogs.com/dennisit/">苏若年</a></div>
+<div class="subtitle">谁的韶华流过鬓发，谁噙一笑煮酒观花，谁能相忘湖边柳下，你我纵是静坐也繁华。</div>
+
+
+
+		
+	</div><!--end: blogTitle 博客的标题和副标题 -->
+	<div id="navigator">
+		
+<ul id="navList">
+<li id="nav_sitehome"><a id="blog_nav_sitehome" class="menu" href="http://www.cnblogs.com/">博客园</a></li>
+<li id="nav_myhome"><a id="blog_nav_myhome" class="menu" href="http://www.cnblogs.com/dennisit/">首页</a></li>
+<li id="nav_newpost"><a id="blog_nav_newpost" class="menu" rel="nofollow" href="https://i.cnblogs.com/EditPosts.aspx?opt=1">新随笔</a></li>
+<li id="nav_contact"></li>
+<li id="nav_rss"><a id="blog_nav_rss" class="menu" href="http://www.cnblogs.com/dennisit/rss">订阅</a>
+<!--<a id="blog_nav_rss_image" class="aHeaderXML" href="http://www.cnblogs.com/dennisit/rss"><img src="//www.cnblogs.com/images/xml.gif" alt="订阅" /></a>--></li>
+<li id="nav_admin"><a id="blog_nav_admin" class="menu" rel="nofollow" href="https://i.cnblogs.com/">管理</a></li>
+</ul>
+
+		<div class="blogStats">
+			
+			<div id="blog_stats">
+<!--done-->
+随笔-117&nbsp;
+文章-0&nbsp;
+评论-429&nbsp;
+</div>
+			
+		</div><!--end: blogStats -->
+	</div><!--end: navigator 博客导航栏 -->
+</div><!--end: header 头部 -->
+<div id="main">
+	<div id="mainContent">
+	<div class="forFlow">
+		
+<div id="post_detail">
+<!--done-->
+<div id="topics">
+	<div class="post">
+		<h1 class="postTitle">
+			<a id="cb_post_title_url" class="postTitle2" href="http://www.cnblogs.com/dennisit/p/3649931.html">mysql分表场景分析与简单分表操作</a>
+		</h1>
+		<div class="clear"></div>
+		<div class="postBody">
+			<div id="cnblogs_post_body"><p class="p0"><strong><span style="font-size: 13px;">为什么要分表</span></strong></p>
+<p class="p0"><span style="font-size: 13px;">首先要知道什么情况下<span style="font-family: Times New Roman;">,</span><span style="font-family: 宋体;">才需要分表个人觉得单表记录条数达到百万到千万级别时就要使用分表了</span><span style="font-family: Times New Roman;">,</span><span style="font-family: 宋体;">分表的目的就在于此，减小数据库的负担，缩短查询时间</span><span style="font-family: Times New Roman;">.<br><br></span></span></p>
+<p class="p0"><span style="font-size: 13px;"><strong>表分割有两种方式</strong>：　　</span></p>
+<p class="p0"><span style="font-size: 13px;"><span style="font-family: Times New Roman;">1</span><span style="font-family: 宋体;"><span style="color: #ff0000;">水平分割</span>：根据一列或多列数据的值把数据行放到两个独立的表中。<br>　　</span>水平分割通常在下面的情况下使用<span style="font-family: Times New Roman;">:<br>　　　　</span>表很大，分割后可以降低在查询时需要读的数据和索引的页数，同时也降低了索引的层数，提高查询速度。<br>　　　　表中的数据本来就有独立性，例如表中分别记录各个地区的数据或不同时期的数据，特别是有些数据常用，而另外一些数据不常用。<br>　　　　需要把数据存放到多个介质上。<br>　　　　水平分割会给应用增加复杂度，它通常在查询时需要多个表名，查询所有数据需要<span style="font-family: Times New Roman;">union</span><span style="font-family: 宋体;">操作。在许多数据库应用中，这种复杂性会超过它带来的优点，因为只要索引关键字不大，则在索引用于查询时，表中增加两到三倍数据量，查询时也就增加读一个索引层的磁盘次数。　　</span></span></p>
+<p class="p0"><span style="font-size: 13px;"><span style="font-family: Times New Roman;">2</span><span style="font-family: 宋体;"><span style="color: #ff0000;">垂直分割</span>：把主码和一些列放到一个表，然后把主码和另外的列放到另一个表中。<br>　　</span>如果一个表中某些列常用，而另外一些列不常用，则可以采用垂直分割，另外垂直分割可以使得数据行变小，一个数据页就能存放更多的数据，在查询时就会减少<span style="font-family: Times New Roman;">I/O</span><span style="font-family: 宋体;">次数。</span> 其缺点是需要管理冗余列，查询所有数据需要<span style="font-family: Times New Roman;">join</span><span style="font-family: 宋体;">操作。　&nbsp;<br><br></span></span></p>
+<p class="p0"><strong><span style="font-size: 13px;">场景案例<span style="font-family: Times New Roman;">:</span></span></strong></p>
+<p class="p0"><span style="font-size: 13px;">博客系统</span></p>
+<p class="p0"><span style="font-size: 13px;">　　<span style="color: #ff0000;">垂直分割<span style="font-family: Times New Roman;">:</span></span></span></p>
+<p class="p0"><span style="font-size: 13px;">　　　　文章标题，作者，分类，创建时间等，是变化频率慢，查询次数多，而且最好有很好的实时性的数据，我们把它叫做冷数据。<br>　　　　而博客的浏览量，回复数等，类似的统计信息，或者别的变化频率比较高的数据，我们把它叫做活跃数据。<br>　　　　所以，在进行数据库结构设计的时候，就应该考虑分表，首先是纵向分表的处理。<br>　　　　这样纵向分表后：<br>　　　　　　首先存储引擎的使用不同，冷数据使用<span style="font-family: Times New Roman;">MyIsam&nbsp;</span><span style="font-family: 宋体;">可以有更好的查询数据。活跃数据，可以使用</span><span style="font-family: Times New Roman;">Innodb&nbsp;,</span><span style="font-family: 宋体;">可以有更好的更新速度。<br></span>　　　　　　其次，对冷数据进行更多的从库配置，因为更多的操作是查询，这样来加快查询速度。对热数据，可以相对有更多的主库的横向分表处理。<br>　　　　　　其实，对于一些特殊的活跃数据，也可以考虑使用<span style="font-family: Times New Roman;">memcache&nbsp;,redis</span><span style="font-family: 宋体;">之类的缓存，等累计到一定量再去更新数据库</span><span style="font-family: Times New Roman;">.</span></span></p>
+<p class="p0"><span style="font-size: 13px; color: #ff0000;">　　水平分割<span style="font-family: Times New Roman;">:</span></span></p>
+<p class="p0"><span style="font-size: 13px;">　　　　当博客的量达到很大时候，就应该采取横向分割来降低每个单表的压力，来提升性能。<br>　　　　例如博客的冷数据表，假如分为<span style="font-family: Times New Roman;">100</span><span style="font-family: 宋体;">个表，当同时有</span><span style="font-family: Times New Roman;">100</span><span style="font-family: 宋体;">万个用户在浏览时，如果是单表的话，会进行</span><span style="font-family: Times New Roman;">100</span><span style="font-family: 宋体;">万次请求，而现在分表后，就可能是每个表进行</span><span style="font-family: Times New Roman;">1</span><span style="font-family: 宋体;">万个数据的请求（因为，不可能绝对的平均，只是假设），这样压力就降低了很多很多。</span></span></p>
+<p class="p0"><span style="font-size: 13px;"><br>mysql<span style="font-family: 宋体;">分表的方法</span><span style="font-family: Times New Roman;">:&nbsp;</span><a href="http://blog.csdn.net/heirenheiren/article/details/7896546">http://blog.csdn.net/heirenheiren/article/details/7896546</a></span><br><br></p>
+<p class="p0"><strong><span style="font-size: 13px;">使用<span style="font-family: Times New Roman;">Merge</span><span style="font-family: 宋体;">存储引擎展示水平分表实例：</span></span></strong></p>
+<p class="p0"><span style="font-size: 13px;">查看<span style="font-family: Times New Roman;">mysql</span><span style="font-family: 宋体;">的存储引擎</span></span></p>
+<div class="cnblogs_code">
+<pre><span style="font-size: 13px;">mysql<span style="color: #808080;">&gt;</span> show engines  \G;</span></pre>
+</div>
+<p class="p0"><strong><span style="font-size: 13px; color: #ff0000;">现实场景模拟</span></strong></p>
+<p class="p0"><span style="font-size: 13px;"><strong><span style="color: #000080;">第一步</span></strong><span style="font-family: Times New Roman;"><strong><span style="color: #000080;">:</span></strong>&nbsp;</span>创建表member</span></p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="mysql%E5%88%86%E8%A1%A8%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%8E%E7%AE%80%E5%8D%95%E5%88%86%E8%A1%A8%E6%93%8D%E4%BD%9C%20-%20%E8%8B%8F%E8%8B%A5%E5%B9%B4%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="font-size: 13px;"><span style="color: #0000ff;">DROP</span> <span style="color: #0000ff;">table</span> <span style="color: #0000ff;">IF</span> <span style="color: #808080;">EXISTS</span><span style="color: #000000;"> member;
+</span><span style="color: #0000ff;">create</span> <span style="color: #0000ff;">table</span><span style="color: #000000;"> member(
+    id </span><span style="color: #0000ff;">bigint</span> auto_increment <span style="color: #0000ff;">primary</span> <span style="color: #0000ff;">key</span><span style="color: #000000;">,
+    name </span><span style="color: #0000ff;">varchar</span>(<span style="color: #800000; font-weight: bold;">20</span><span style="color: #000000;">),
+    sex </span><span style="color: #0000ff;">tinyint</span> <span style="color: #808080;">not</span> <span style="color: #0000ff;">null</span> <span style="color: #0000ff;">default</span> <span style="color: #ff0000;">'</span><span style="color: #ff0000;">0</span><span style="color: #ff0000;">'</span><span style="color: #000000;">
+)ENGINE</span><span style="color: #808080;">=</span>InnoDB <span style="color: #0000ff;">DEFAULT</span> CHARSET<span style="color: #808080;">=</span>utf8 AUTO_INCREMENT<span style="color: #808080;">=</span><span style="color: #800000; font-weight: bold;">1</span> ; </span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="mysql%E5%88%86%E8%A1%A8%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%8E%E7%AE%80%E5%8D%95%E5%88%86%E8%A1%A8%E6%93%8D%E4%BD%9C%20-%20%E8%8B%8F%E8%8B%A5%E5%B9%B4%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p class="p0"><span style="font-size: 13px;"><span style="color: #000080;"><strong>第二步</strong></span>:创建存储过程,插入百万数据</span></p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="mysql%E5%88%86%E8%A1%A8%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%8E%E7%AE%80%E5%8D%95%E5%88%86%E8%A1%A8%E6%93%8D%E4%BD%9C%20-%20%E8%8B%8F%E8%8B%A5%E5%B9%B4%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="font-size: 13px;"><span style="color: #000000;">#如果存在已定义的存储过程inserts,删除掉
+</span><span style="color: #0000ff;">drop</span> <span style="color: #0000ff;">procedure</span> <span style="color: #0000ff;">IF</span> <span style="color: #808080;">EXISTS</span><span style="color: #000000;"> inserts;
+
+#自定义结束符
+delimiter </span><span style="color: #808080;">//</span><span style="color: #000000;">
+
+#创建存储过程
+</span><span style="color: #0000ff;">create</span> <span style="color: #0000ff;">procedure</span><span style="color: #000000;"> inserts()
+</span><span style="color: #0000ff;">begin</span>
+    <span style="color: #0000ff;">DECLARE</span> i <span style="color: #0000ff;">int</span><span style="color: #000000;">;
+    </span><span style="color: #0000ff;">set</span> i <span style="color: #808080;">=</span> <span style="color: #800000; font-weight: bold;">1</span><span style="color: #000000;">;
+        </span><span style="color: #0000ff;">WHILE</span>(i <span style="color: #808080;">&lt;=</span> <span style="color: #800000; font-weight: bold;">10</span><span style="color: #000000;">) DO  
+               </span><span style="color: #0000ff;">insert</span> <span style="color: #0000ff;">into</span> member(name,sex) <span style="color: #0000ff;">values</span>(concat(<span style="color: #ff0000;">'</span><span style="color: #ff0000;">name</span><span style="color: #ff0000;">'</span>,i),i<span style="color: #808080;">%</span><span style="color: #800000; font-weight: bold;">2</span><span style="color: #000000;">);
+             </span><span style="color: #0000ff;">SET</span> i <span style="color: #808080;">=</span> i<span style="color: #808080;">+</span><span style="color: #800000; font-weight: bold;">1</span><span style="color: #000000;">;
+           </span><span style="color: #0000ff;">END</span> <span style="color: #0000ff;">WHILE</span><span style="color: #000000;">;
+</span><span style="color: #0000ff;">end</span><span style="color: #000000;">;
+
+#使用自定义结束符结束存储过程定义
+</span><span style="color: #808080;">//</span><span style="color: #000000;">
+
+#还原结束符为;
+delimiter ;
+
+#调用存储过程
+call inserts();</span></span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="mysql%E5%88%86%E8%A1%A8%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%8E%E7%AE%80%E5%8D%95%E5%88%86%E8%A1%A8%E6%93%8D%E4%BD%9C%20-%20%E8%8B%8F%E8%8B%A5%E5%B9%B4%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p class="p0"><span style="font-size: 13px;">MySQL的语法默认使用分号";"作为一条SQL语句结束的标志.可以使用delimiter命令将其修改成其他符号，如："delimiter&nbsp;//"&nbsp;表示以//作为提交符号.</span></p>
+<p class="p0"><span style="font-size: 13px;">为了演示分表<span style="font-family: Courier New;">,</span><span style="font-family: 宋体;">所以实例中插入</span><span style="font-family: Courier New;">10</span><span style="font-family: 宋体;">条数据模拟</span><span style="font-family: Courier New;">.</span></span></p>
+<p class="p0"><span style="font-size: 13px;"><strong><span style="color: #000080;">第三步</span></strong><span style="font-family: Courier New;">:</span><span style="font-family: 宋体;">创建分表</span></span></p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="mysql%E5%88%86%E8%A1%A8%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%8E%E7%AE%80%E5%8D%95%E5%88%86%E8%A1%A8%E6%93%8D%E4%BD%9C%20-%20%E8%8B%8F%E8%8B%A5%E5%B9%B4%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="font-size: 13px;"><span style="color: #000000;">#分表1#
+</span><span style="color: #0000ff;">DROP</span> <span style="color: #0000ff;">table</span> <span style="color: #0000ff;">IF</span> <span style="color: #808080;">EXISTS</span><span style="color: #000000;"> tb_member1;
+</span><span style="color: #0000ff;">create</span> <span style="color: #0000ff;">table</span><span style="color: #000000;"> tb_member1(
+    id </span><span style="color: #0000ff;">bigint</span> <span style="color: #0000ff;">primary</span> <span style="color: #0000ff;">key</span><span style="color: #000000;"> auto_increment ,
+    name </span><span style="color: #0000ff;">varchar</span>(<span style="color: #800000; font-weight: bold;">20</span><span style="color: #000000;">),
+    sex </span><span style="color: #0000ff;">tinyint</span> <span style="color: #808080;">not</span> <span style="color: #0000ff;">null</span> <span style="color: #0000ff;">default</span> <span style="color: #ff0000;">'</span><span style="color: #ff0000;">0</span><span style="color: #ff0000;">'</span><span style="color: #000000;">
+)ENGINE</span><span style="color: #808080;">=</span>MyISAM  <span style="color: #0000ff;">DEFAULT</span> CHARSET<span style="color: #808080;">=</span>utf8 AUTO_INCREMENT<span style="color: #808080;">=</span><span style="color: #800000; font-weight: bold;">1</span><span style="color: #000000;"> ;  
+
+#分表2#
+</span><span style="color: #0000ff;">DROP</span> <span style="color: #0000ff;">table</span> <span style="color: #0000ff;">IF</span> <span style="color: #808080;">EXISTS</span><span style="color: #000000;"> tb_member2;
+#复制表1
+</span><span style="color: #0000ff;">create</span> <span style="color: #0000ff;">table</span> tb_member2 <span style="color: #808080;">like</span> tb_member1;</span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="mysql%E5%88%86%E8%A1%A8%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%8E%E7%AE%80%E5%8D%95%E5%88%86%E8%A1%A8%E6%93%8D%E4%BD%9C%20-%20%E8%8B%8F%E8%8B%A5%E5%B9%B4%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p class="p0"><span style="font-size: 13px;"><span style="color: #000080;"><strong>第四步</strong></span><span style="font-family: Times New Roman;">:</span><span style="font-family: 宋体;">创建主表</span><span style="font-family: Times New Roman;">,</span><span style="font-family: 宋体;">这里主表的定义与要分的目标表有不同</span></span></p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="mysql%E5%88%86%E8%A1%A8%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%8E%E7%AE%80%E5%8D%95%E5%88%86%E8%A1%A8%E6%93%8D%E4%BD%9C%20-%20%E8%8B%8F%E8%8B%A5%E5%B9%B4%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="font-size: 13px;"><span style="color: #000000;">#主表#
+</span><span style="color: #0000ff;">DROP</span> <span style="color: #0000ff;">table</span> <span style="color: #0000ff;">IF</span> <span style="color: #808080;">EXISTS</span><span style="color: #000000;"> tb_member;
+</span><span style="color: #0000ff;">create</span> <span style="color: #0000ff;">table</span><span style="color: #000000;"> tb_member(
+    id </span><span style="color: #0000ff;">bigint</span><span style="color: #000000;"> auto_increment ,
+    name </span><span style="color: #0000ff;">varchar</span>(<span style="color: #800000; font-weight: bold;">20</span><span style="color: #000000;">),
+    sex </span><span style="color: #0000ff;">tinyint</span> <span style="color: #808080;">not</span> <span style="color: #0000ff;">null</span> <span style="color: #0000ff;">default</span> <span style="color: #ff0000;">'</span><span style="color: #ff0000;">0</span><span style="color: #ff0000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #0000ff;">INDEX</span><span style="color: #000000;">(id)
+)ENGINE</span><span style="color: #808080;">=</span>MERGE <span style="color: #0000ff;">UNION</span><span style="color: #808080;">=</span>(tb_member1,tb_member2) INSERT_METHOD<span style="color: #808080;">=</span>LAST AUTO_INCREMENT<span style="color: #808080;">=</span><span style="color: #800000; font-weight: bold;">1</span> ; </span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="mysql%E5%88%86%E8%A1%A8%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%8E%E7%AE%80%E5%8D%95%E5%88%86%E8%A1%A8%E6%93%8D%E4%BD%9C%20-%20%E8%8B%8F%E8%8B%A5%E5%B9%B4%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p class="p0"><span style="font-size: 13px;">查询<span style="font-family: Times New Roman;">tb_member</span><span style="font-family: 宋体;">表的索引信息</span></span></p>
+<div class="cnblogs_code">
+<pre><span style="font-size: 13px;">mysql<span style="color: #808080;">&gt;</span> show <span style="color: #0000ff;">index</span> <span style="color: #0000ff;">from</span> tb_member \G;</span></pre>
+</div>
+<p class="p0"><span style="font-size: 13px;"><span style="color: #000080;"><strong>第五步</strong></span><span style="font-family: Times New Roman;">:</span><span style="font-family: 宋体;">将目标表数据分到两个分表中去</span></span></p>
+<div class="cnblogs_code"><div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="mysql%E5%88%86%E8%A1%A8%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%8E%E7%AE%80%E5%8D%95%E5%88%86%E8%A1%A8%E6%93%8D%E4%BD%9C%20-%20%E8%8B%8F%E8%8B%A5%E5%B9%B4%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div>
+<pre><span style="font-size: 13px;"><span style="color: #0000ff;">INSERT</span> <span style="color: #0000ff;">INTO</span><span style="color: #000000;"> tb_member1(tb_member1.id,tb_member1.name,tb_member1.sex) 
+    </span><span style="color: #0000ff;">SELECT</span><span style="color: #000000;"> member.id,member.name,member.sex
+    </span><span style="color: #0000ff;">FROM</span> member <span style="color: #0000ff;">where</span> member.id<span style="color: #808080;">%</span><span style="color: #800000; font-weight: bold;">2</span><span style="color: #808080;">=</span><span style="color: #800000; font-weight: bold;">0</span><span style="color: #000000;"> ;
+
+</span><span style="color: #0000ff;">INSERT</span> <span style="color: #0000ff;">INTO</span><span style="color: #000000;"> tb_member2(tb_member2.id,tb_member2.name,tb_member2.sex)
+    </span><span style="color: #0000ff;">SELECT</span><span style="color: #000000;"> member.id,member.name,member.sex
+    </span><span style="color: #0000ff;">FROM</span> member <span style="color: #0000ff;">where</span> member.id<span style="color: #808080;">%</span><span style="color: #800000; font-weight: bold;">2</span><span style="color: #808080;">=</span><span style="color: #800000; font-weight: bold;">1</span> ;</span></pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a href="javascript:void(0);" onclick="copyCnblogsCode(this)" title="复制代码"><img src="mysql%E5%88%86%E8%A1%A8%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%8E%E7%AE%80%E5%8D%95%E5%88%86%E8%A1%A8%E6%93%8D%E4%BD%9C%20-%20%E8%8B%8F%E8%8B%A5%E5%B9%B4%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/copycode.gif" alt="复制代码"></a></span></div></div>
+<p class="p0"><span style="font-size: 13px;">当然实际场景根据需要进行唯一标识操作,取hash啊什么的等等,这里只使用简单去求模分表.</span></p>
+<p class="p0"><span style="font-size: 13px;"><span style="color: #000080;"><strong>第六步</strong></span><span style="font-family: Times New Roman;">:&nbsp;</span><span style="font-family: 宋体;">查看分表数据</span></span><br><span style="font-size: 13px;"><img src="mysql%E5%88%86%E8%A1%A8%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%8E%E7%AE%80%E5%8D%95%E5%88%86%E8%A1%A8%E6%93%8D%E4%BD%9C%20-%20%E8%8B%8F%E8%8B%A5%E5%B9%B4%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/071128458564057.png" alt=""> <img src="mysql%E5%88%86%E8%A1%A8%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%8E%E7%AE%80%E5%8D%95%E5%88%86%E8%A1%A8%E6%93%8D%E4%BD%9C%20-%20%E8%8B%8F%E8%8B%A5%E5%B9%B4%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/071128532624793.png" alt=""></span><br><span style="font-size: 13px;"><span style="color: #000080;"><strong>第七步</strong></span><span style="font-family: Times New Roman;"><span style="color: #000080;"><strong>:</strong></span>&nbsp;</span><span style="font-family: 宋体;">查看总表数据</span></span><br><span style="font-size: 13px;"><img src="mysql%E5%88%86%E8%A1%A8%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%8E%E7%AE%80%E5%8D%95%E5%88%86%E8%A1%A8%E6%93%8D%E4%BD%9C%20-%20%E8%8B%8F%E8%8B%A5%E5%B9%B4%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/071129177158291.png" alt=""></span></p>
+<p class="p0"><span style="font-size: 13px;">这样就把表<span style="font-family: Times New Roman;">member</span><span style="font-family: 宋体;">中的数据分开了</span><span style="font-family: Times New Roman;">,&nbsp;</span><span style="font-family: 宋体;">分成的表组为&nbsp;</span><span style="font-family: Times New Roman;">tb_member</span><span style="font-family: 宋体;">为主表</span><span style="font-family: Times New Roman;">,tb_member1</span><span style="font-family: 宋体;">与</span><span style="font-family: Times New Roman;">tb_member2</span><span style="font-family: 宋体;">为分表</span><span style="font-family: Times New Roman;">.</span><span style="font-family: 宋体;">分表后，数据都是存放在分表里，总表只是一个外壳，存取数据发生在一个一个的分表里面。<br><br></span></span></p>
+<p class="p0"><span style="font-size: 13px;">对于<span style="font-family: Times New Roman;">merge</span><span style="font-family: 宋体;">表，需要注意的是&nbsp;&nbsp;</span></span><br><span style="font-size: 13px;">	1.&nbsp;<span style="font-family: 宋体;">每个子表的结构必须一致，主表和子表的结构需要一致，<br></span>2.&nbsp;<span style="font-family: 宋体;">每个子表的索引在</span><span style="font-family: Times New Roman;">merge</span><span style="font-family: 宋体;">表中都会存在，所以在</span><span style="font-family: Times New Roman;">merge</span><span style="font-family: 宋体;">表中不能根据该索引进行唯一性检索。<br></span></span><span style="font-size: 13px;">3.&nbsp;<span style="font-family: 宋体;">子表需要是</span><span style="font-family: Times New Roman;">MyISAM</span><span style="font-family: 宋体;">引擎<br></span>4.&nbsp;REPLACE<span style="font-family: 宋体;">在</span><span style="font-family: Times New Roman;">merge</span><span style="font-family: 宋体;">表中不会工作<br></span>5.&nbsp;AUTO_INCREMENT&nbsp;<span style="font-family: 宋体;">不会按照你所期望的方式工作<br><br></span>创建<span style="font-family: Times New Roman;">Mysql&nbsp;Merge</span><span style="font-family: 宋体;">表的参数&nbsp;</span><span style="font-family: Times New Roman;">INSERT_METHOD</span><span style="font-family: 宋体;">有几个参数&nbsp;。</span></span><br><span style="font-size: 13px;">&nbsp;	LAST&nbsp;&nbsp;<span style="font-family: 宋体;">如果你执行</span><span style="font-family: Times New Roman;">insert&nbsp;</span><span style="font-family: 宋体;">指令来操作</span><span style="font-family: Times New Roman;">merge</span><span style="font-family: 宋体;">表时，插入操作会把数据添加到最后一个子表中。<br></span>&nbsp; FIRST&nbsp;&nbsp;<span style="font-family: 宋体;">同理，执行插入数据时会把数据添加到第一个子表中。<br><br></span></span></p>
+<p class="p0"><span style="font-family: 宋体; font-size: 13px;">转载请注明出处:[<a href="http://www.cnblogs.com/dennisit/p/3649931.html">http://www.cnblogs.com/dennisit/p/3649931.html</a>]</span></p></div><div id="MySignature" style="display: block;">热爱生活,热爱Coding,敢于挑战,用于探索 ... </div>
+<div class="clear"></div>
+<div id="blog_post_info_block">
+<div id="BlogPostCategory">分类: <a href="http://www.cnblogs.com/dennisit/category/521257.html" target="_blank">Javaee</a></div>
+<div id="EntryTag">标签: <a href="http://www.cnblogs.com/dennisit/tag/mysql%E5%88%86%E8%A1%A8/">mysql分表</a></div>
+<div id="blog_post_info"><div id="green_channel">
+        <a href="javascript:void(0);" id="green_channel_digg" onclick="DiggIt(3649931,cb_blogId,1);green_channel_success(this,'谢谢推荐！');">好文要顶</a>
+            <a id="green_channel_follow" onclick="follow('1e92bbd0-624e-e211-aa8f-842b2b196315');" href="javascript:void(0);">关注我</a>
+    <a id="green_channel_favorite" onclick="AddToWz(cb_entryId);return false;" href="javascript:void(0);">收藏该文</a>
+    <a id="green_channel_weibo" href="javascript:void(0);" title="分享至新浪微博" onclick="ShareToTsina()"><img src="mysql%E5%88%86%E8%A1%A8%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%8E%E7%AE%80%E5%8D%95%E5%88%86%E8%A1%A8%E6%93%8D%E4%BD%9C%20-%20%E8%8B%8F%E8%8B%A5%E5%B9%B4%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/icon_weibo_24.png" alt=""></a>
+    <a id="green_channel_wechat" href="javascript:void(0);" title="分享至微信" onclick="shareOnWechat()"><img src="mysql%E5%88%86%E8%A1%A8%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%8E%E7%AE%80%E5%8D%95%E5%88%86%E8%A1%A8%E6%93%8D%E4%BD%9C%20-%20%E8%8B%8F%E8%8B%A5%E5%B9%B4%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/wechat.png" alt=""></a>
+</div>
+<div id="author_profile">
+    <div id="author_profile_info" class="author_profile_info">
+            <a href="http://home.cnblogs.com/u/dennisit/" target="_blank"><img src="mysql%E5%88%86%E8%A1%A8%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%8E%E7%AE%80%E5%8D%95%E5%88%86%E8%A1%A8%E6%93%8D%E4%BD%9C%20-%20%E8%8B%8F%E8%8B%A5%E5%B9%B4%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/20130708145554.jpg" class="author_avatar" alt=""></a>
+        <div id="author_profile_detail" class="author_profile_info">
+            <a href="http://home.cnblogs.com/u/dennisit/">苏若年</a><br>
+            <a href="http://home.cnblogs.com/u/dennisit/followees">关注 - 22</a><br>
+            <a href="http://home.cnblogs.com/u/dennisit/followers">粉丝 - 240</a>
+        </div>
+    </div>
+    <div class="clear"></div>
+    <div id="author_profile_honor"></div>
+    <div id="author_profile_follow">
+                <a href="javascript:void(0);" onclick="follow('1e92bbd0-624e-e211-aa8f-842b2b196315');return false;">+加关注</a>
+    </div>
+</div>
+<div id="div_digg">
+    <div class="diggit" onclick="votePost(3649931,'Digg')">
+        <span class="diggnum" id="digg_count">2</span>
+    </div>
+    <div class="buryit" onclick="votePost(3649931,'Bury')">
+        <span class="burynum" id="bury_count">0</span>
+    </div>
+    <div class="clear"></div>
+    <div class="diggword" id="digg_tips">
+    </div>
+</div>
+</div>
+<div class="clear"></div>
+<div id="post_next_prev"><a href="http://www.cnblogs.com/dennisit/p/3623984.html" class="p_n_p_prefix">« </a> 上一篇：<a href="http://www.cnblogs.com/dennisit/p/3623984.html" title="发布于2014-03-25 19:45">自己写的一个Solr搜索实例,增删改查+高亮+分页</a><br><a href="http://www.cnblogs.com/dennisit/p/3649945.html" class="p_n_p_prefix">» </a> 下一篇：<a href="http://www.cnblogs.com/dennisit/p/3649945.html" title="发布于2014-04-07 11:44">初始cfx开发webservice, 简单实例应用</a><br></div>
+</div>
+
+
+		</div>
+		<div class="postDesc">posted @ <span id="post-date">2014-04-07 11:35</span> <a href="http://www.cnblogs.com/dennisit/">苏若年</a> 阅读(<span id="post_view_count">2007</span>) 评论(<span id="post_comment_count">2</span>)  <a href="https://i.cnblogs.com/EditPosts.aspx?postid=3649931" rel="nofollow">编辑</a> <a href="#" onclick="AddToWz(3649931);return false;">收藏</a></div>
+	</div>
+	<script type="text/javascript">var allowComments=true,cb_blogId=137862,cb_entryId=3649931,cb_blogApp=currentBlogApp,cb_blogUserGuid='1e92bbd0-624e-e211-aa8f-842b2b196315',cb_entryCreatedDate='2014/4/7 11:35:00';loadViewCount(cb_entryId);</script>
+	
+</div><!--end: topics 文章、评论容器-->
+</div><a name="!comments"></a><div id="blog-comments-placeholder"><div id="comments_pager_top"></div>
+<!--done-->
+<div class="feedback_area_title">评论列表</div>
+<div class="feedbackNoItems"></div>
+	
+
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="#3079862" class="layer">#1楼</a><a name="3079862" id="comment_anchor_3079862"></a>  <span class="comment_date">2014-12-06 18:45</span> <a id="a_comment_author_3079862" href="http://www.cnblogs.com/sumsung753/" target="_blank">sumsung753</a> <a href="http://msg.cnblogs.com/send/sumsung753" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_3079862" class="blog_comment_body">解析得不错。<br>不过有疑问。<br>我现在按地区分表，从总表中分省份分（58同城是不是按城市分？）。<br>根据列province:sichuang,chongqi,shangdong...<br>这样在merge表的insert_method应该选择哪个？</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(3079862,'Digg',this)">支持(0)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(3079862,'Bury',this)">反对(0)</a></div><span id="comment_3079862_avatar" style="display:none;">http://pic.cnblogs.com/face/541453/20140710024508.png</span>
+			</div>
+		</div>
+	
+		<div class="feedbackItem">
+			<div class="feedbackListSubtitle">
+				<div class="feedbackManage">
+					&nbsp;&nbsp;<span class="comment_actions"></span>
+				</div>
+				<a href="#3214642" class="layer">#2楼</a><a name="3214642" id="comment_anchor_3214642"></a><span id="comment-maxId" style="display:none;">3214642</span><span id="comment-maxDate" style="display:none;">2015/6/24 22:29:12</span>  <span class="comment_date">2015-06-24 22:29</span> <a id="a_comment_author_3214642" href="http://www.cnblogs.com/miketwais/" target="_blank">MasonZhang</a> <a href="http://msg.cnblogs.com/send/MasonZhang" title="发送站内短消息" class="sendMsg2This">&nbsp;</a>
+			</div>
+			<div class="feedbackCon">
+				<div id="comment_body_3214642" class="blog_comment_body">执行下面语句的时候会报错<br>mysql&gt;  show index from tb_member \G;<br>ERROR 1168 (HY000): Unable to open underlying table which is differently defined<br> or of non-MyISAM type or doesn't exist<br>请问是啥问题啊？谢谢</div><div class="comment_vote"><a href="javascript:void(0);" class="comment_digg" onclick="return voteComment(3214642,'Digg',this)">支持(0)</a><a href="javascript:void(0);" class="comment_bury" onclick="return voteComment(3214642,'Bury',this)">反对(0)</a></div><span id="comment_3214642_avatar" style="display:none;">http://pic.cnblogs.com/face/489086/20151102165608.png</span>
+			</div>
+		</div>
+	<div id="comments_pager_bottom"></div></div><script type="text/javascript">var commentManager = new blogCommentManager();commentManager.renderComments(0);</script>
+<div id="comment_form" class="commentform">
+<a name="commentform"></a>
+<div id="divCommentShow"></div>
+<div id="comment_nav"><span id="span_refresh_tips"></span><a href="javascript:void(0);" onclick="return RefreshCommentList();" id="lnk_RefreshComments" runat="server" clientidmode="Static">刷新评论</a><a href="#" onclick="return RefreshPage();">刷新页面</a><a href="#top">返回顶部</a></div>
+<div id="comment_form_container"><div class="login_tips">注册用户登录后才能发表评论，请 <a rel="nofollow" href="javascript:void(0);" class="underline" onclick="return login('commentform');">登录</a> 或 <a rel="nofollow" href="javascript:void(0);" class="underline" onclick="return register();">注册</a>，<a href="http://www.cnblogs.com/">访问</a>网站首页。</div></div>
+<div class="ad_text_commentbox" id="ad_text_under_commentbox"></div>
+<div id="ad_t2"><a href="http://www.ucancode.com/index.htm" target="_blank">【推荐】50万行VC++源码: 大型组态工控、电力仿真CAD与GIS源码库</a><br><a href="http://www.gcpowertools.com.cn/products/spreadjs/?utm_source=cnblogs&amp;utm_medium=blogpage&amp;utm_term=bottom&amp;utm_content=SpreadJS&amp;utm_campaign=community" target="_blank">【推荐】可嵌入您系统的“在线Excel”！SpreadJS 纯前端表格控件</a><br></div>
+<div id="opt_under_post"></div>
+<div id="cnblogs_c1" class="c_ad_block"><a href="http://cn.udacity.com/dlnd/?utm_source=cnblogs&amp;utm_medium=banner&amp;utm_campaign=DLND05" target="_blank"><img src="mysql%E5%88%86%E8%A1%A8%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%8E%E7%AE%80%E5%8D%95%E5%88%86%E8%A1%A8%E6%93%8D%E4%BD%9C%20-%20%E8%8B%8F%E8%8B%A5%E5%B9%B4%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/24442-20170831211050937-1134779006.png" alt="优达学城0831" width="300" height="250"></a></div>
+<div id="under_post_news"><div class="itnews c_ad_block"><b>最新IT新闻</b>:<br> ·  <a href="http://news.cnblogs.com/n/577356/" target="_blank">小米什么时间进行适配安卓8.0？高管回应</a><br> ·  <a href="http://news.cnblogs.com/n/577355/" target="_blank">谷歌更新Android Wear政策：鼓励开发可独立运行的手表应用</a><br> ·  <a href="http://news.cnblogs.com/n/577354/" target="_blank">受昆虫眼睛结构启发 科学家找到研发耐用钙钛矿太阳能电池的方法</a><br> ·  <a href="http://news.cnblogs.com/n/577340/" target="_blank">支付宝“刷脸支付”全球首次商用</a><br> ·  <a href="http://news.cnblogs.com/n/577353/" target="_blank">福特新专利：自调平杯架可以防止饮料溢出</a><br>» <a href="http://news.cnblogs.com/" title="IT新闻" target="_blank">更多新闻...</a></div></div>
+<div id="cnblogs_c2" class="c_ad_block"><a href="https://www.jiguang.cn/devservice?source=bky&amp;hmsr=%E5%8D%9A%E5%AE%A2%E5%9B%AD&amp;hmpl=&amp;hmcu=&amp;hmkw=&amp;hmci=" target="_blank"><img src="mysql%E5%88%86%E8%A1%A8%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%8E%E7%AE%80%E5%8D%95%E5%88%86%E8%A1%A8%E6%93%8D%E4%BD%9C%20-%20%E8%8B%8F%E8%8B%A5%E5%B9%B4%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/24442-20170901112708499-388259391.gif" alt="极光0901" width="468" height="60"></a></div>
+<div id="under_post_kb"><div class="itnews c_ad_block" id="kb_block"><b>最新知识库文章</b>:<br><div id="kb_recent"> ·  <a href="http://kb.cnblogs.com/page/575829/" target="_blank">做到这一点，你也可以成为优秀的程序员</a><br> ·  <a href="http://kb.cnblogs.com/page/566880/" target="_blank">写给立志做码农的大学生</a><br> ·  <a href="http://kb.cnblogs.com/page/569057/" target="_blank">架构腐化之谜</a><br> ·  <a href="http://kb.cnblogs.com/page/572854/" target="_blank">学会思考，而不只是编程</a><br> ·  <a href="http://kb.cnblogs.com/page/574767/" target="_blank">编写Shell脚本的最佳实践</a><br></div>» <a href="http://kb.cnblogs.com/" target="_blank">更多知识库文章...</a></div></div>
+<div id="HistoryToday" class="c_ad_block"></div>
+<script type="text/javascript">
+    fixPostBody();
+    setTimeout(function () { incrementViewCount(cb_entryId); }, 50);
+    deliverAdT2();
+    deliverAdC1();
+    deliverAdC2();    
+    loadNewsAndKb();
+    loadBlogSignature();
+    LoadPostInfoBlock(cb_blogId, cb_entryId, cb_blogApp, cb_blogUserGuid);
+    GetPrevNextPost(cb_entryId, cb_blogId, cb_entryCreatedDate);
+    loadOptUnderPost();
+    GetHistoryToday(cb_blogId, cb_blogApp, cb_entryCreatedDate);   
+</script>
+</div>
+
+
+	</div><!--end: forFlow -->
+	</div><!--end: mainContent 主体内容容器-->
+
+	<div id="sideBar">
+		<div id="sideBarMain">
+			
+			<div id="calendar"><div id="blog-calendar" style="display:none"></div><script type="text/javascript">loadBlogDefaultCalendar();</script></div>
+			
+			<div id="leftcontentcontainer">
+				<div id="blog-sidecolumn"><div id="sidebar_search" class="sidebar-block">
+<div id="sidebar_search" class="mySearch">
+<h3 class="catListTitle">搜索</h3>
+<div id="sidebar_search_box">
+
+<div id="widget_my_google" class="div_my_zzk"><input name="google_q" id="google_q" onkeydown="return google_go_enter(event)" class="input_my_zzk" type="text">&nbsp;<input onclick="google_go()" value="谷歌搜索" class="btn_my_zzk" type="button"></div>
+</div>
+</div>
+
+</div><div id="sidebar_categories">
+<div class="catListPostCategory">
+<h3 class="catListTitle">随笔分类</h3>
+
+<ul>
+
+<li><a id="CatList_LinkList_0_Link_0" href="http://www.cnblogs.com/dennisit/category/521259.html">3d开发(6)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_1" href="http://www.cnblogs.com/dennisit/category/521252.html">elasticsearch(5)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_2" href="http://www.cnblogs.com/dennisit/category/521257.html">Javaee(58)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_3" href="http://www.cnblogs.com/dennisit/category/440766.html">linux(7)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_4" href="http://www.cnblogs.com/dennisit/category/521251.html">lucene(6)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_5" href="http://www.cnblogs.com/dennisit/category/521253.html">mongodb(9)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_6" href="http://www.cnblogs.com/dennisit/category/521256.html">mybatis(4)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_7" href="http://www.cnblogs.com/dennisit/category/563462.html">solr(6)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_8" href="http://www.cnblogs.com/dennisit/category/440726.html">spring(21)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_9" href="http://www.cnblogs.com/dennisit/category/573831.html">webservice</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_10" href="http://www.cnblogs.com/dennisit/category/453580.html">Web前端(8)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_11" href="http://www.cnblogs.com/dennisit/category/666785.html">zookeeper(4)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_12" href="http://www.cnblogs.com/dennisit/category/445346.html">数据挖掘(9)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_13" href="http://www.cnblogs.com/dennisit/category/521190.html">搜索引擎(15)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_14" href="http://www.cnblogs.com/dennisit/category/453578.html">网络编程(3)</a> </li>
+
+<li><a id="CatList_LinkList_0_Link_15" href="http://www.cnblogs.com/dennisit/category/483831.html">游戏开发(7)</a> </li>
+
+</ul>
+
+</div>
+
+<div class="catListPostArchive">
+<h3 class="catListTitle">随笔档案</h3>
+
+<ul>
+
+<li><a id="CatList_LinkList_1_Link_0" href="http://www.cnblogs.com/dennisit/archive/2015/06.html">2015年6月 (10)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_1" href="http://www.cnblogs.com/dennisit/archive/2015/05.html">2015年5月 (1)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_2" href="http://www.cnblogs.com/dennisit/archive/2015/03.html">2015年3月 (3)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_3" href="http://www.cnblogs.com/dennisit/archive/2014/12.html">2014年12月 (1)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_4" href="http://www.cnblogs.com/dennisit/archive/2014/11.html">2014年11月 (6)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_5" href="http://www.cnblogs.com/dennisit/archive/2014/06.html">2014年6月 (2)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_6" href="http://www.cnblogs.com/dennisit/archive/2014/05.html">2014年5月 (2)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_7" href="http://www.cnblogs.com/dennisit/archive/2014/04.html">2014年4月 (4)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_8" href="http://www.cnblogs.com/dennisit/archive/2014/03.html">2014年3月 (9)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_9" href="http://www.cnblogs.com/dennisit/archive/2013/11.html">2013年11月 (1)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_10" href="http://www.cnblogs.com/dennisit/archive/2013/10.html">2013年10月 (7)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_11" href="http://www.cnblogs.com/dennisit/archive/2013/09.html">2013年9月 (4)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_12" href="http://www.cnblogs.com/dennisit/archive/2013/08.html">2013年8月 (2)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_13" href="http://www.cnblogs.com/dennisit/archive/2013/07.html">2013年7月 (5)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_14" href="http://www.cnblogs.com/dennisit/archive/2013/05.html">2013年5月 (6)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_15" href="http://www.cnblogs.com/dennisit/archive/2013/04.html">2013年4月 (11)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_16" href="http://www.cnblogs.com/dennisit/archive/2013/03.html">2013年3月 (7)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_17" href="http://www.cnblogs.com/dennisit/archive/2013/02.html">2013年2月 (13)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_18" href="http://www.cnblogs.com/dennisit/archive/2013/01.html">2013年1月 (14)</a> </li>
+
+<li><a id="CatList_LinkList_1_Link_19" href="http://www.cnblogs.com/dennisit/archive/2012/12.html">2012年12月 (9)</a> </li>
+
+</ul>
+
+</div>
+
+<div class="catListImageCategory">
+<h3 class="catListTitle">相册</h3>
+
+<ul>
+
+<li><a id="CatList_LinkList_2_Link_0" href="http://www.cnblogs.com/dennisit/gallery/528410.html" rel="nofollow">微相册</a> </li>
+
+</ul>
+
+</div>
+
+</div><div id="sidebar_scorerank" class="sidebar-block">
+<div class="catListBlogRank">
+<h3 class="catListTitle">积分与排名</h3>
+<ul>
+	<li class="liScore">
+		积分 -	223676
+	</li>
+	<li class="liRank">
+		排名 -	894
+	</li>
+</ul>
+</div>
+
+
+</div><div id="sidebar_recentcomments" class="sidebar-block"><div id="recent_comments_wrap">
+<div class="catListComment">
+<h3 class="catListTitle">最新评论</h3>
+	<div id="RecentCommentsBlock"><ul>
+        <li class="recent_comment_title"><a href="http://www.cnblogs.com/dennisit/archive/2013/02/16/2913287.html#3772755">1. Re:Java实现视频网站的视频上传、视频转码、视频关键帧抽图, 及视频播放功能</a></li>
+        <li class="recent_comment_body">@毫安倩倩求源码 1837062750@qq.com 谢谢...</li>
+        <li class="recent_comment_author">--桥边红药坊</li>
+        <li class="recent_comment_title"><a href="http://www.cnblogs.com/dennisit/archive/2013/02/16/2913287.html#3771022">2. Re:Java实现视频网站的视频上传、视频转码、视频关键帧抽图, 及视频播放功能</a></li>
+        <li class="recent_comment_body">@枫的季节你好，你现在有吗，有的话可以给我一份吗 1140343347@qq.com 感激...</li>
+        <li class="recent_comment_author">--毫安倩倩</li>
+        <li class="recent_comment_title"><a href="http://www.cnblogs.com/dennisit/archive/2013/02/16/2913287.html#3771020">3. Re:Java实现视频网站的视频上传、视频转码、视频关键帧抽图, 及视频播放功能</a></li>
+        <li class="recent_comment_body">@cjyuanqi2你好，你现在有吗，有的话可以给我一份吗...</li>
+        <li class="recent_comment_author">--毫安倩倩</li>
+        <li class="recent_comment_title"><a href="http://www.cnblogs.com/dennisit/archive/2013/02/16/2913287.html#3771014">4. Re:Java实现视频网站的视频上传、视频转码、视频关键帧抽图, 及视频播放功能</a></li>
+        <li class="recent_comment_body">希望楼主能分享下代码，1140343347@qq.com，谢谢</li>
+        <li class="recent_comment_author">--毫安倩倩</li>
+        <li class="recent_comment_title"><a href="http://www.cnblogs.com/dennisit/archive/2013/02/16/2913287.html#3759259">5. Re:Java实现视频网站的视频上传、视频转码、视频关键帧抽图, 及视频播放功能</a></li>
+        <li class="recent_comment_body">希望楼主能分享下代码，921187961@qq.com，谢谢</li>
+        <li class="recent_comment_author">--jansonlin</li>
+</ul>
+</div>
+</div>
+</div></div><div id="sidebar_topviewedposts" class="sidebar-block"><div id="topview_posts_wrap">
+<div class="catListView">
+<h3 class="catListTitle">阅读排行榜</h3>
+	<div id="TopViewPostsBlock"><ul><li><a href="http://www.cnblogs.com/dennisit/archive/2013/02/16/2913287.html">1. Java实现视频网站的视频上传、视频转码、视频关键帧抽图, 及视频播放功能(35972)</a></li><li><a href="http://www.cnblogs.com/dennisit/archive/2013/04/07/3005847.html">2. Lucene使用IKAnalyzer分词实例 及 IKAnalyzer扩展词库(22013)</a></li><li><a href="http://www.cnblogs.com/dennisit/p/3374297.html">3. SpringMVC整合Mongodb开发,高级操作(18920)</a></li><li><a href="http://www.cnblogs.com/dennisit/p/3184225.html">4. 分享一百多套开发视频教程的下载地址(16574)</a></li><li><a href="http://www.cnblogs.com/dennisit/p/3372568.html">5. SpringMVC整合Mongodb开发 架构搭建(14660)</a></li></ul></div>
+</div>
+</div></div><div id="sidebar_topcommentedposts" class="sidebar-block"><div id="topfeedback_posts_wrap">
+<div class="catListFeedback">
+<h3 class="catListTitle">评论排行榜</h3>
+	<div id="TopFeedbackPostsBlock"><ul><li><a href="http://www.cnblogs.com/dennisit/archive/2013/02/16/2913287.html">1. Java实现视频网站的视频上传、视频转码、视频关键帧抽图, 及视频播放功能(143)</a></li><li><a href="http://www.cnblogs.com/dennisit/archive/2013/01/05/2845095.html">2. 分享一段下载QQ用户日志到本地的代码  [转日志不用进空间啦,输入QQ号就可以下载对方任意一篇日志了](16)</a></li><li><a href="http://www.cnblogs.com/dennisit/p/3244987.html">3. web前端学习笔记-瀑布流的算法分析与代码实现(15)</a></li><li><a href="http://www.cnblogs.com/dennisit/archive/2013/03/20/2971431.html">4. 分步介绍如何实现精美的带二级栏目的导航栏.(13)</a></li><li><a href="http://www.cnblogs.com/dennisit/archive/2013/04/08/3008631.html">5. 基于Luence的分布式搜索引擎ElasticSearch搜索实例演示(Java API)(13)</a></li></ul></div>
+</div>
+</div></div></div><script type="text/javascript">loadBlogSideColumn();</script>
+			</div>
+			
+		</div><!--end: sideBarMain -->
+	</div><!--end: sideBar 侧边栏容器 -->
+	<div class="clear"></div>
+	</div><!--end: main -->
+	<div class="clear"></div>
+	<div id="footer">
+		
+<!--done-->
+Copyright ©2017 苏若年
+	</div><!--end: footer -->
+</div><!--end: home 自定义的最大容器 -->
+<!--PageEndHtml Block Begin-->
+<a href="http://p.yiqifa.com/c?s=e677cd98&amp;w=680185&amp;c=17307&amp;i=39336&amp;l=0&amp;e=&amp;t=http://fashion.dangdang.com/" target="_blank"><img src="mysql%E5%88%86%E8%A1%A8%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90%E4%B8%8E%E7%AE%80%E5%8D%95%E5%88%86%E8%A1%A8%E6%93%8D%E4%BD%9C%20-%20%E8%8B%8F%E8%8B%A5%E5%B9%B4%20-%20%E5%8D%9A%E5%AE%A2%E5%9B%AD_files/3034208287.png" style="width:250px; height:375px; display:none;" border="0"></a>
+<!--PageEndHtml Block End-->
+
+
+</body></html>

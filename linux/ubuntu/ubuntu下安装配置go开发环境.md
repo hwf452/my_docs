@@ -42,6 +42,9 @@ go version go1.8.3 darwin/amd64
 
 配置环境变量
 sudo vim /etc/profile
+或
+cd
+sudo vi .bash_profile
 
 添加下面的内容：
 export GOPATH="/root/go"
