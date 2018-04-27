@@ -1,0 +1,74 @@
+1.pod官网
+https://cocoapods.org/
+
+
+2.pod的安装
+// 先更新gem
+sudo gem update --system 
+
+//再切换到最新地址
+gem sources --remove https://rubygems.org/  
+$ gem sources -a https://gems.ruby-china.org/  
+$ gem sources -l  
+//安装
+sudo gem install cocoapods
+pod setup 
+升级库
+pod repo update
+
+3.查看pod版本
+pod --version 
+
+4.删除本地文件夹
+sudo rm -rf ~/.cocoapods/repos/master
+pod setup 
+pod  install
+
+5.CocoaPods删除库缓存(如果遇到一些与缓存有关的错误，可以尝试删除库来解决)
+rm -rf ~/Library/Developer/Xcode/DerivedData  
+rm -rf ~/Library/Caches/CocoaPods  
+rm -rf Pods  
+pod install  
+
+6.升级pod版本，以升级到1.0.1为例
+sudo gem install cocoapods --version 1.0.1  
+
+7.卸载当前版本
+sudo gem uninstall cocoapods  
+
+
+
+
+
+
+8.pod的基本使用。
+
+1.初始化
+进入工程目录执行如下命令 
+cd /Users/skyinno/xxx
+pod init
+
+把 #platform :ios, '8.0'
+去掉注释改成
+platform :ios, '8.0'
+2.查询 
+pod search AFNetworking
+3.安装
+pod install
+4.更新
+pod update
+
+
+
+
+5.pod文件的完整形式 
+
+
+platform :ios, '8.0'
+use_frameworks!
+
+target 'MyApp' do
+  pod 'AFNetworking', '~> 2.6'
+  pod 'ORStackView', '~> 3.0'
+  pod 'SwiftyJSON', '~> 2.3'
+end
