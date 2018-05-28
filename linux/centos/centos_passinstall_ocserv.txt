@@ -1,0 +1,38 @@
+1.首先打开终端登陆，执行以下命令
+
+wget https://raw.githubusercontent.com/travislee8964/Ocserv-install-script-for-CentOS-RHEL-7/master/ocserv-install-script-for-centos7.sh
+
+2.编辑下载下来的脚本文件
+
+chmod 777 ocserv-install-script-for-centos7.sh
+vi ocserv-install-script-for-centos7.sh
+
+将其中 ocserv_version=”0.10.9″ 这一行的版本号改成 0.9.2，据说此版本较稳定。
+
+
+
+
+3.然后执行脚本
+
+sh ocserv-install-script-for-centos7.sh
+
+
+安装过程中会提示你输入端口、用户名和密码等，自己按需填写。
+
+安装完成后编辑配置文件
+
+vi /usr/local/etc/ocserv/ocserv.conf
+
+
+保存配置文件，执行下面的代码重启Ocserv服务
+
+systemctl restart ocserv.service
+
+如果想给朋友们使用，也可以添加几个用户，使用下面的命令
+
+ocpasswd -c /usr/local/etc/ocserv/ocpasswd 用户名
+
+
+执行后会提示设置密码，按需输入即可。
+
+
