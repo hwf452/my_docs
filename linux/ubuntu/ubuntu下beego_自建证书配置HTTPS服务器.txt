@@ -1,0 +1,44 @@
+前题是安装升级openssl(Mac自带openssl，不必安装)
+
+1.创建用私钥签名的证书，配置到Apache服务器或beego服务端
+
+首先，生成私钥，创建请求证书，使用私钥对证书进行签名
+生成私钥
+
+openssl genrsa -des3 -out private.key 2048 
+
+-des3代表加上了加密，后面的2048是代表生成的密钥的位数，1024已经不是很安全，详情请见互联网全站HTTPS的时代已经到来
+
+生成证书请求
+
+openssl req -new -key private.key -out server.csr
+
+这一步需要填写一些信息，其中Common Name (e.g. server FQDN or YOUR name) []这个需要填写你的域名或服务器地址。
+
+
+生成服务器的私钥，去除密钥口令 
+
+openssl rsa -in private.key -out server.key
+
+使用私钥为证书请求签名，生成给服务器签署的证书，格式是x509的PEM格式 
+
+openssl x509 -req -in server.csr -out server.crt -outform pem -signkey server.key -days 3650
+
+-outform pem指定证书生成的格式，默认是pem，所以这个命令也可以写作成
+
+sudo openssl x509 -req -in server.csr -out server.crt -signkey server.key -days 3650
+
+
+将证书copy到Apache配置路径下或beego项目下。
+
+2.编辑beego的代码，发现只需要在app初始化时initialize的init下如下的配置，即可实现https
+
+func initHttps() {
+	beego.BConfig.Listen.EnableHTTPS = true
+	beego.BConfig.Listen.Graceful = true
+	beego.BConfig.Listen.HTTPSPort = 8081
+	beego.BConfig.Listen.HTTPSCertFile = "server.crt"
+	beego.BConfig.Listen.HTTPSKeyFile = "server.key"
+}
+
+https://www.cloudservicesystem.com
