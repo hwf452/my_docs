@@ -58,4 +58,62 @@ dpkg -l |grep ^rc|awk '{print $2}' |sudo xargs dpkg -P
 dpkg -l | grep mysql # 若没有返回，说明已完成卸载
 
 
+如果登录mysql 总报错如下 
+ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)
+
+解决办法：
+
+1，停止mysql服务
+
+
+2.停址mysql
+sudo service mysql stop
+
+sudo vi /etc/mysql/mysql.conf.d/mysqld.cnf
+
+找到[mysqld]段，并加入一行“skip-grant-tables”,
+
+skip-grant-tables
+
+保存
+
+
+3.开启mysql
+sudo service mysql start
+
+
+4，登录musql
+
+mysql -u root
+
+此处注意不要加-p
+
+
+5,修改密码，mysql5.7用此语法
+use mysql ;
+update mysql.user set authentication_string=password('Skyinno251,') where user='root';
+flush privileges;
+
+6,回到第二步骤去掉加上的
+
+skip-grant-tables
+
+保存 重启mysql就ok了
+sudo service mysql restart
+
+
+
+7.开启Mysql远程访问 
+grant all on *.* to root@'%' identified by ‘Skyinno251,’;
+flush privileges;
+
+退出mysql
+sudo vi /etc/mysql/mysql.conf.d/mysqld.cnf
+把
+bind-address    = 127.0.0.1
+改成
+#bind-address   = 127.0.0.1
+
+保存 重启mysql就ok了
+sudo service mysql restart
 
