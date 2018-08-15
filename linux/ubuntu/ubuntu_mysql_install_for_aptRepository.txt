@@ -1,0 +1,61 @@
+通过 APT Repository 方式安装 mysql
+
+
+1.进入官网下载deb源。
+https://dev.mysql.com/downloads/repo/apt/
+
+wget https://dev.mysql.com/get/mysql-apt-config_0.8.10-1_all.deb
+
+2.修改权限
+chmod 777 mysql-apt-config_0.8.10-1_all.deb
+
+3.Adding the MySQL APT Repository
+sudo dpkg -i mysql-apt-config_0.8.10-1_all.deb
+
+进入后选择第一项 mysql server& cluster(currently selected:mysql-5.7)
+然后选 mysql5.7 返回来点 ok
+
+
+4.更新apt-get
+sudo apt-get update
+
+5.安装mysql
+sudo apt-get install mysql-server
+
+6.查看mysql状态
+sudo service mysql status
+
+7.停址mysql
+sudo service mysql stop
+
+8.开启mysql
+sudo service mysql start
+
+
+9.删除mysql
+
+
+sudo apt-get remove mysql-server
+sudo apt-get remove mysql-common
+sudo apt-get remove mysql-client
+
+删除mysql的数据文件
+
+sudo rm /var/lib/mysql/ -R
+
+删除mysql的配置文件
+
+sudo rm /etc/mysql/ -R
+
+清理残留数据
+
+dpkg -l |grep ^rc|awk '{print $2}' |sudo xargs dpkg -P
+
+
+
+检查是否卸载干净
+
+dpkg -l | grep mysql # 若没有返回，说明已完成卸载
+
+
+

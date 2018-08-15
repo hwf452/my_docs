@@ -27,6 +27,7 @@ cd
 vim .bash_profile
 
 在末尾加入如下：
+export GOROOT=/usr/local/go
 export GOPATH=/Users/skyinno/go
 export GOBIN=$GOPATH/bin
 export PATH=$PATH:$GOBIN

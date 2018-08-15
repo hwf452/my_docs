@@ -1,0 +1,146 @@
+1.P12(PKCS12)和JKS互相转换
+1)P12 ——> JKS
+
+keytool -importkeystore -srckeystore test.p12 -srcstoretype PKCS12 -deststoretype JKS -destkeystore test.jks
+
+    1
+
+2）JSK ——>P12
+
+keytool -importkeystore -srckeystore test.jks -srcstoretype JKS -deststoretype PKCS12 -destkeystore test1.p12
+
+    1
+
+2.JKS和CER相互转换
+1)JKS——->CER
+
+keytool -export -alias test -keystore test.jks -storepass 123456 -file test.cer
+
+    1
+
+2)CER——->JKS
+
+keytool -import -v -alias test -file test.cer -keystore test.jks -storepass 123456 -noprompt 
+
+    1
+
+3.PFX(P12)与pEM转换
+使用比较少
+1)去除pem格式的key的密码(输出的密码不输入即可)
+
+openssl rsa -in test.key -out test1.key
+
+    1
+
+2)合并PEM格式输出PFX(p12)
+
+openssl pkcs12 -export -inkey test1.key -in test.crt -out test.pfx
+
+    1
+
+3)指定intermedian和CA
+
+openssl pkcs12 -export -out test1.pfx -inkey my.private.key -in test.crt -certfile test.crt -CAfile test1.crt 
+
+    1
+
+4)PFX转回PEM
+
+openssl pkcs12 -in cert2.pfx -out cert22.pem -nodes
+
+    1
+
+5)PEM转KEY
+
+
+openssl rsa -in test.pem -out test.key
+
+    1
+    2
+
+4.DER与PEM转换
+1)DER——->PEM
+
+openssl x509 -in cert.crt -inform der -outform pem -out cert.pem
+
+    1
+
+2)PEM——->DER
+
+openssl x509 -in cert.crt -outform der-out cert.der
+
+    1
+
+5.CER与PEM转换
+1)CER——->PEM
+
+openssl x509 -in cert2.cer -out cert2.pem -outform PEM
+
+    1
+
+2)PEM——–>CERT
+这里需要PEM——>PKCS12—–>CRT—–>CER
+
+//PEM-->PKCS12
+openssl pkcs12 -export -out cacert.p12 -in cacert.pem
+//PKCS12-->CRT
+openssl pkcs12 -in cacert.p12 -out mycerts.crt -nokeys -clcerts
+//CRT-->CER
+openssl x509 -inform pem -in mycerts.crt -outform der -out mycerts.cer
+
+    1
+    2
+    3
+    4
+    5
+    6
+
+6.JKS与PEM转换
+这里可能是上面方法的整合，但为了方便以后开发，还是整合好堆积起来比较美。
+1)JKS——>PEM
+JSK转换为PEM需要先，JKS–>P12–>PEM
+
+//jks--->p12[需要注意这里必须add -alias keyOwnerAlias 否则会报错]
+keytool -importkeystore -srckeystore sert.jks -destkeystore sert.p12 -srcstoretype jks -deststoretype pkcs12 -alias keyOwnerAlias
+//p12--->pem
+openssl pkcs12 -in sert.p12 -out sert.pem
+
+    1
+    2
+    3
+    4
+
+2)PEM——>JKS
+PEM转换为JKS，需要先PEM—>PFX—->JKS
+
+//PEM--->PFX
+openssl pkcs12 -export -out test.pfx -inkey test.key -in test.pem
+//PFX--->JKS
+keytool -importkeystore -srckeystore test.pfx -destkeystore test.jks -srcstoretype PKCS12 -deststoretype JKS
+
+    1
+    2
+    3
+    4
+
+7.JKS文件转换为KEYSTORE文件
+1)JKS—–>KEYSTORE
+
+//JKS--->P12
+keytool -importkeystore -srckeystore D:\test.keystore -srcstoretype JKS -deststoretype PKCS12 -destkeystore test1.p12
+//P12---->KEYSTORE
+keytool -v -importkeystore -srckeystore D:\test.p12 -srcstoretype PKCS12 -destkeystore D:\test.keystore -deststoretype JKS
+
+    1
+    2
+    3
+    4
+
+2)KEYSTORE——>JKS
+
+//keystore--->crt
+keytool -export -alias test -file D:\test.crt -keystore D:\test.keystore
+//CRT-->CER
+openssl x509 -inform pem -in test.crt -outform der -out test.cer
+//CER--->JKS
+keytool -import -v -alias test -file test.cer -keystore test.jks -storepass 123456 -noprompt 

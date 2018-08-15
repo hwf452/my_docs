@@ -1,0 +1,60 @@
+1.首先安装，配置好go环境。
+
+2.源码安装 Gogs
+
+# 下载并安装依赖
+$ go get -u github.com/gogs/gogs
+
+# 构建主程序
+$ cd $GOPATH/src/github.com/gogs/gogs
+$ go build
+
+3.测试安装
+
+您可以通过以下方式检查 Gogs 是否可以正常工作：
+
+cd $GOPATH/src/github.com/gogs/gogs
+./gogs web
+
+如果您没有发现任何错误信息，则可以使用 Ctrl-C 来终止运行。
+
+4.使用标签构建
+
+Gogs 默认并没有支持一些功能，这些功能需要在构建时明确使用构建标签（build tags）来支持。
+
+目前使用标签构建的功能如下：
+
+    sqlite3：SQLite3 数据库支持
+    pam：PAM 授权认证支持
+    cert：生成自定义证书支持
+    miniwinsvc：Windows 服务内置支持（或者您可以使用 NSSM 来创建服务）
+
+例如，您需要支持以上所有功能，则需要先删除 $GOPATH/pkg/{GOOS_GOARCH}/github.com/gogs/gogs 目录，然后执行以下命令：
+
+$ go get -u -tags "sqlite pam cert" github.com/gogs/gogs
+$ cd $GOPATH/src/github.com/gogs/gogs
+$ go build -tags "sqlite pam cert"
+
+5.设置开机启动git
+
+cd
+
+vi bootstart.sh
+
+加入 
+
+
+6.重启系系 
+
+reboot
+
+
+7.启动git
+
+./bootstart.sh
+
+
+8.参考官网配置
+
+https://gogs.io
+

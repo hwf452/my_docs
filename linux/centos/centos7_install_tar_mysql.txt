@@ -1,0 +1,153 @@
+Centos7 中安装mysql-5.7.22-1.el7.x86_64.rpm-bundle.tar
+
+
+1.下载mysql-5.7.22-1.el7.x86_64.rpm-bundle.tar  ftp上传到服务器。
+
+或服务器直接下载
+wget https://dev.mysql.com/get/Downloads/MySQL-5.7/mysql-5.7.22-1.el7.x86_64.rpm-bundle.tar
+
+
+2.2.解压到指定的文件夹
+
+chmod 777 mysql-5.7.22-1.el7.x86_64.rpm-bundle.tar
+tar -xvf mysql-5.7.22-1.el7.x86_64.rpm-bundle.tar
+
+得多个rpm文件
+
+mysql-community-client-5.7.22-1.el7.x86_64.rpm
+mysql-community-common-5.7.22-1.el7.x86_64.rpm
+mysql-community-devel-5.7.22-1.el7.x86_64.rpm
+mysql-community-embedded-5.7.22-1.el7.x86_64.rpm
+mysql-community-embedded-compat-5.7.22-1.el7.x86_64.rpm
+mysql-community-embedded-devel-5.7.22-1.el7.x86_64.rpm
+mysql-community-libs-5.7.22-1.el7.x86_64.rpm
+mysql-community-libs-compat-5.7.22-1.el7.x86_64.rpm
+mysql-community-minimal-debuginfo-5.7.22-1.el7.x86_64.rpm
+mysql-community-server-5.7.22-1.el7.x86_64.rpm
+mysql-community-server-minimal-5.7.22-1.el7.x86_64.rpm
+mysql-community-test-5.7.22-1.el7.x86_64.rpm
+
+
+
+3.Centos 自带的数据库：
+
+yum remove mysql-libs
+
+
+4、因为mysql的依赖关系，依次按顺序解压
+
+rpm -ivh mysql-community-common-5.7.22-1.el7.x86_64.rpm 
+rpm -ivh mysql-community-libs-5.7.22-1.el7.x86_64.rpm 
+rpm -ivh mysql-community-client-5.7.22-1.el7.x86_64.rpm 
+rpm -ivh mysql-community-server-5.7.22-1.el7.x86_64.rpm --force --nodeps
+
+
+
+5、为了保证数据库目录为与文件的所有者为 mysql 登陆用户，如果你是以 root 身份运行 mysql 服务，需要执行下面的命令初始化
+
+mysqld --initialize --user=mysql
+
+期间可能会出现如下错误：
+
+①、error while loading shared libraries: libaio.so.1: cannot open shared object file: No such file or directory
+
+解决方法：# yum install -y libaio
+
+②、TIMESTAMP with implicit DEFAULT value is deprec
+
+解决方法：在my.cof [mysqld]下添加 explicit_defaults_for_timestamp=true，再启动就可以了，my.cof是在etc/my.cof下。
+
+③、initialize specified but the data directory has files in it. Aborting.
+
+解决方法：rm -fr /var/lib/mysql 。
+
+
+6、启动mysql服务
+
+systemctl start mysqld.service
+
+7.开机启动
+systemctl enable mysqld
+systemctl daemon-reload
+
+重启电脑
+cd
+reboot
+
+
+8.获取mysql自动生成的密码：
+
+命令：grep 'temporary password' /var/log/mysqld.log
+n2mpqudSi0,2
+
+9.修改root本地登录密码
+
+mysql -uroot -p
+输入密码   n2mpqudSi0,2
+
+set password for 'root'@'localhost'=password('Skyinno251,')
+flush privileges;
+
+
+10.开启Mysql远程访问 
+grant all on *.* to root@'%' identified by ‘Skyinno251,’;
+flush privileges;
+
+
+
+
+
+
+
+
+
+
+如果登录mysql 总报错如下 
+ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: YES)
+
+
+解决办法：
+
+1，停止mysql服务
+
+systemctl stop mysqld.service
+
+
+2，修改配置文件无密码登录
+
+vi /etc/my.cnf
+
+在最尾部加上
+
+skip-grant-tables
+
+保存
+
+3，启动mysql
+
+systemctl start mysqld.service
+
+
+4，登录musql
+
+mysql -u root
+
+此处注意不要加-p
+
+
+5,修改密码，mysql5.7用此语法
+
+use mysql ;
+
+
+ update mysql.user set authentication_string=password('Skyinno251,') where user='root' ;
+
+
+6,回到第二步骤去掉加上的
+
+skip-grant-tables
+
+保存 重启mysql就ok了
+
+
+

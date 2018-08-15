@@ -1,0 +1,44 @@
+从源码安装golang
+
+
+1.从git下载 golang源码。
+
+git clone git@github.com:golang/go.git
+
+复制go源码到桌面保存一份。
+
+2.安装gcc和glibc-devel(linux需要) 
+
+3.首先编译Go1.4
+
+cd go
+git checkout -b 1.4.3 go1.4.3
+cd src
+./all.bash
+编译好的go 1.4.3 版本，默认存储在 ~/go
+4.复制 ~/go 到 $GOROOT_BOOTSTRAP 指定的目录(高版本的Go的构建脚本，该变量值默认是：~/go1.4)
+cp -rf ~/go ~/go1.4
+
+5.设置GOROOT_BOOTSTRAP环境变量。
+cd 
+vi .bash_profile
+export GOROOT_BOOTSTRAP =/home/huangwenfei/go1.4
+保存退出
+
+6.把删除掉go目录，同时把桌面保存的go源码复制home目录下。
+git tag
+cd ~/go
+git checkout -b 1.9.7 go1.9.7	
+cd src
+./all.bash
+
+7.设置环境变量。
+vi .bash_profile
+
+export GOPATH=/Users/skyinno/go
+export GOBIN=$GOPATH/bin
+export PATH=$PATH:$GOBIN 
+保存退出
+
+source .bash_profile
+

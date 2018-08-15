@@ -1,0 +1,25 @@
+react-native android 打包步骤
+
+1.react-native bundle 执行
+
+
+react-native bundle 
+--platform android  //平台类型
+--dev false //是否是开发
+--entry-file index.android.js //输入
+--bundle-output android/bundle/index.android.bundle //输出  
+--assets-dest android/assets  //资源文件
+
+
+
+
+
+react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res
+
+
+react-native run-android
+
+
+
+
+./gradlew assembleRelease
