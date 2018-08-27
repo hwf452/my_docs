@@ -1,0 +1,45 @@
+/*摇奖机紫色皮肤*/
+/*闪灯*/
+.main .machine-container .machine-outer{
+    background-image: url(//p4.ssl.qhimg.com/t014068aa590de03420.png);
+}
+/*深色背景框*/
+.main .machine-container{
+    background-image: url(//p5.ssl.qhimg.com/t01da5ac24913f6b335.png);
+}
+/*banner title*/
+.banner{
+    width: 9.2rem;
+    height: 1.45rem;
+    background-image: url(//p4.ssl.qhimg.com/t01057d58fd24920806.png);
+}
+/*剩余次数背景颜色*/
+.main .left-num{
+    background-color: #7b00d9;
+    color: #fff;
+    border: 1px solid #cb2fe1;
+}
+/*渐变背景图*/
+.main .machine-container .machine-outer:before{
+    background-image: url(//p5.ssl.qhimg.com/t01e3024a39dfebf1d8.png);
+}
+/*礼物框深、浅*/
+.main .machine-container .machine-inner .machine-content .machine-lists .machine .machine-box:nth-child(odd){
+    background-image: url(//p0.ssl.qhimg.com/t0151f5762461b70f7c.png);
+}
+.main .machine-container .machine-inner .machine-content .machine-lists .machine .machine-box:nth-child(2n){
+    background-image: url(//p3.ssl.qhimg.com/t0157b73892b89b2c98.png);
+}
+/*按钮状态*/
+.machine-operate .machine-button{
+    background-image: url(//p4.ssl.qhimg.com/t01771d5afddbf65fa6.png);
+}
+.machine-operate .machine-button.mousedown{
+    background-image: url(//p3.ssl.qhimg.com/t01e5102b2bd965db74.png);
+}
+.machine-operate .machine-button.disable{
+    background-image: url(//p5.ssl.qhimg.com/t01b20987656aa67110.png);
+}
+.machine-operate .machine-tool{
+    background-image: url(//p5.ssl.qhimg.com/t01f464df21e9458644.png);
+}
