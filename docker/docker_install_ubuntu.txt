@@ -199,8 +199,14 @@ docker.io/centos    latest              0584b3d2cf6d        3 weeks ago         
 
 首先启动它：
 
+首先启动它：
+//无端口映射
 ～$ docker run -it chug/ubuntu14.04x64 /bin/bash
 root@aa97ba3292ce:/#
+
+或 
+//有端口映射
+docker run -it --name ubuntu_test -p 5000:4000 chug/ubuntu14.04x64 /bin/bash
 
    
 
