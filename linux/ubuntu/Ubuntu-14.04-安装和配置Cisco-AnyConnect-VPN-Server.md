@@ -74,12 +74,20 @@ $ cd certificates
 
 我们创建一个 `CA` 模板文件（`ca.tmpl`），其中内容如下，你可以修改其中的 `cn` 和 `organization` 字段：
 
+这里需要先输入一个命令获得当前的时间戳（数值），例如：
+```bash
+$ date +%s
+
+1500541096
+```
+然后写入到 serial = 1500541096
+
 ```bash
 $ vim ca.tmpl
 
 cn = "VPN CA"
 organization = "Cisco Inc."
-serial = 1
+serial = 1500541096
 expiration_days = 3650
 ca
 signing_key
@@ -98,12 +106,20 @@ $ certtool --generate-self-signed --load-privkey ca-key.pem --template ca.tmpl -
 
 接下来，我们创建一个 `server` 证书模板（`server.tmpl`），内容如下。请注意其中的 `cn` 字段，它必须是你的服务器的域名或者 `IP` 地址。
 
+这里需要先输入一个命令获得当前的时间戳（数值），例如：
+```bash
+$ date +%s
+
+1500541096
+```
+然后写入到 serial = 1500541096
+
 ```bash
 $ vim server.tmpl
 
 cn = "202.103.204.68"
 organization = "Cisco Inc."
-serial = 2
+serial = 1500541096
 expiration_days = 3650
 signing_key
 encryption_key
@@ -139,6 +155,48 @@ $ certtool --generate-certificate --load-privkey server-key.pem --load-ca-certif
 $ sudo mkdir -p /etc/ocserv
 $ sudo cp server-cert.pem server-key.pem /etc/ocserv
 ```
+
+## 3.5. 生成客户端证书 ##
+跟前面一样，我们创建一个客户端证书模板 “user.tmpl”，这里需要先输入一个命令获得当前的时间戳（数值），例如：
+
+```bash
+$ date +%s
+
+1500541096
+```
+把该命令返回的时间戳 “1500541096” 填到 user.tmpl 模板的 serial 字段里，如下所示：
+
+```bash
+$ vim user.tmpl
+
+cn = "Your UserName"
+unit = "users"
+serial = "1500541096"
+expiration_days = 3650
+signing_key
+tls_www_server
+```
+
+其中 cn 字段是你的客户端证书的用户名，名字可以随意取。注意，这个用户名不是你登录 Cisco AnyConnect VPN 的用户名。
+
+然后生成客户端证书 user-cert.pem，命令如下：
+
+```bash
+$ certtool --generate-privkey --outfile user-key.pem
+$ certtool --generate-certificate --load-privkey user-key.pem --load-ca-certificate ca-cert.pem --load-ca-privkey ca-key.pem --template user.tmpl --outfile user-cert.pem
+```
+
+最后把客户端证书 user-cert.pem 转换成 pkcs12 格式，生成的客户端证书文件是 user.p12，命令如下：
+
+```bash
+$ openssl pkcs12 -export -inkey user-key.pem -in user-cert.pem -name "User VPN Client Cert" -certfile ca-cert.pem -out user.p12
+```
+
+通过 http 服务器或其他方式将客户端证书 user.p12 文件传输到客户端，导入即可。
+
+其中 "User VPN Client Cert" 的名字是可以自定义的，User 可以改为 user.tmpl 模板里你設置的 UserName 的值。
+
+（注：如果你的系统没有安装 openssl，需要先安装 openssl，以便执行相关命令。）
 
 ## 3.6. ocserv 配置文件 ##
 
