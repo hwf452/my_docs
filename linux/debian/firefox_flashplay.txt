@@ -1,0 +1,8 @@
+firefox flash 插件安装。
+
+1.下载flash_player_npapi_linux.x86_64.tar.gz
+2.解压
+tar -vxf flash_player_npapi_linux.x86_64.tar.gz
+3.复制插件到库目录
+/home/harry/downloads
+cp ./libflashplayer.so /usr/lib/mozilla/plugins/
