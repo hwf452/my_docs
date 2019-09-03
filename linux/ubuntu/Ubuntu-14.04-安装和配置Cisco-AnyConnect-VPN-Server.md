@@ -216,6 +216,8 @@ $ sudo vim ./ocserv.conf
 # ocserv 还支持证书认证，可以通过 Pluggable Authentication Modules (PAM) 使用 radius 等认证方式
 auth = "plain[/etc/ocserv/ocpasswd]"
 
+isolate-workers = false
+
 # 最大客户端连接数，默认值是 10
 max-clients = 16
 
