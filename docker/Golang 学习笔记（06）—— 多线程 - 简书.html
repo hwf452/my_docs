@@ -1,0 +1,1913 @@
+<!DOCTYPE html>
+<!--[if IE 6]><html class="ie lt-ie8"><![endif]-->
+<!--[if IE 7]><html class="ie lt-ie8"><![endif]-->
+<!--[if IE 8]><html class="ie ie8"><![endif]-->
+<!--[if IE 9]><html class="ie ie9"><![endif]-->
+<!--[if !IE]><!-->
+<html><!--<![endif]--><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=no">
+
+  <!-- Start of Baidu Transcode -->
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta name="applicable-device" content="pc,mobile">
+  <meta name="MobileOptimized" content="width">
+  <meta name="HandheldFriendly" content="true">
+  <meta name="mobile-agent" content="format=html5;url=https://www.jianshu.com/p/c3d65105fa46">
+  <!-- End of Baidu Transcode -->
+
+    <meta name="description" content="本文为转载，原文：Golang 学习笔记（06）—— 多线程 介绍 线程是cpu调度的最小单位，只有不同的线程才能同时在多核cpu上同时运行。但线程太占资源，线程调度开销大。go中的goroutine是一个轻量级的线程，执行时只需要4-5k的内存，比线程更易用，更高效，更轻便，调度开销比线程小，可同时运行上千万个并发。go语言中开启一个goroutine非常简单，go函数名（），就开启了个线...">
+
+  <meta name="360-site-verification" content="604a14b53c6b871206001285921e81d8">
+  <meta property="wb:webmaster" content="294ec9de89e7fadb">
+  <meta property="qc:admins" content="104102651453316562112116375">
+  <meta property="qc:admins" content="11635613706305617">
+  <meta property="qc:admins" content="1163561616621163056375">
+  <meta name="google-site-verification" content="cV4-qkUJZR6gmFeajx_UyPe47GW9vY6cnCrYtCHYNh4">
+  <meta name="google-site-verification" content="HF7lfF8YEGs1qtCE-kPml8Z469e2RHhGajy6JPVy5XI">
+  <meta http-equiv="mobile-agent" content="format=html5; url=https://www.jianshu.com/p/c3d65105fa46">
+
+  <!-- Apple -->
+  <meta name="apple-mobile-web-app-title" content="简书">
+
+    <!--  Meta for Smart App Banner -->
+  <meta name="apple-itunes-app" content="app-id=888237539, app-argument=jianshu://notes/21662890">
+  <!-- End -->
+
+  <!--  Meta for Twitter Card -->
+  <meta content="summary" property="twitter:card">
+  <meta content="@jianshucom" property="twitter:site">
+  <meta content="Golang 学习笔记（06）—— 多线程" property="twitter:title">
+  <meta content="本文为转载，原文：Golang 学习笔记（06）—— 多线程 介绍 线程是cpu调度的最小单位，只有不同的线程才能同时在多核cpu上同时运行。但线程太占资源，线程调度开销大。..." property="twitter:description">
+  <meta content="https://www.jianshu.com/p/c3d65105fa46" property="twitter:url">
+  <!-- End -->
+
+  <!--  Meta for OpenGraph -->
+  <meta property="fb:app_id" content="865829053512461">
+  <meta property="og:site_name" content="简书">
+  <meta property="og:title" content="Golang 学习笔记（06）—— 多线程">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://www.jianshu.com/p/c3d65105fa46">
+  <meta property="og:description" content="本文为转载，原文：Golang 学习笔记（06）—— 多线程 介绍 线程是cpu调度的最小单位，只有不同的线程才能同时在多核cpu上同时运行。但线程太占资源，线程调度开销大。go中的gorout...">
+  <!-- End -->
+
+  <!--  Meta for Facebook Applinks -->
+  <meta property="al:ios:url" content="jianshu://notes/21662890">
+  <meta property="al:ios:app_store_id" content="888237539">
+  <meta property="al:ios:app_name" content="简书">
+
+  <meta property="al:android:url" content="jianshu://notes/21662890">
+  <meta property="al:android:package" content="com.jianshu.haruki">
+  <meta property="al:android:app_name" content="简书">
+  <!-- End -->
+
+
+    <title>Golang 学习笔记（06）—— 多线程 - 简书</title>
+
+  <meta name="csrf-param" content="authenticity_token">
+<meta name="csrf-token" content="GPtSlht9i6lctcLol0iHWE+tBDrN1/0h74L8zSsRwLQpXFtOxK7G3re0nXETgkBqGYdJ3p8Hb4d6s8WiPFNtFg==">
+
+  <link rel="stylesheet" media="all" href="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/web-274d6a76417c1f7a7da5.css">
+  
+  <link rel="stylesheet" media="all" href="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/entry-aa75deb505b1b600256a.css">
+
+  <link href="https://cdn2.jianshu.io/assets/favicons/favicon-e743bfb1821442341c3ab15bdbe804f7ad97676bd07a770ccc9483473aa76f06.ico" rel="shortcut icon" type="image/x-icon">
+      <link rel="apple-touch-icon-precomposed" href="https://cdn2.jianshu.io/assets/apple-touch-icons/57-a6f1f1ee62ace44f6dc2f6a08575abd3c3b163288881c78dd8d75247682a4b27.png" sizes="57x57">
+      <link rel="apple-touch-icon-precomposed" href="https://cdn2.jianshu.io/assets/apple-touch-icons/72-fb9834bcfce738fd7b9c5e31363e79443e09a81a8e931170b58bc815387c1562.png" sizes="72x72">
+      <link rel="apple-touch-icon-precomposed" href="https://cdn2.jianshu.io/assets/apple-touch-icons/76-49d88e539ff2489475d603994988d871219141ecaa0b1a7a9a1914f4fe3182d6.png" sizes="76x76">
+      <link rel="apple-touch-icon-precomposed" href="https://cdn2.jianshu.io/assets/apple-touch-icons/114-24252fe693524ed3a9d0905e49bff3cbd0228f25a320aa09053c2ebb4955de97.png" sizes="114x114">
+      <link rel="apple-touch-icon-precomposed" href="https://cdn2.jianshu.io/assets/apple-touch-icons/120-1bb7371f5e87f93ce780a5f1a05ff1b176828ee0d1d130e768575918a2e05834.png" sizes="120x120">
+      <link rel="apple-touch-icon-precomposed" href="https://cdn2.jianshu.io/assets/apple-touch-icons/152-bf209460fc1c17bfd3e2b84c8e758bc11ca3e570fd411c3bbd84149b97453b99.png" sizes="152x152">
+
+  <!-- Start of 访问统计 -->
+    <script src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/push.js"></script><script src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/hm.txt"></script><script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?0c0e9d9b1e7d617b3e6842e85b9fb068";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+  <!-- End of 访问统计 -->
+<style type="text/css">@charset "UTF-8";.image-package .image-container{position:relative;z-index:2;background-color:#eee;-webkit-transition:background-color .1s linear;-o-transition:background-color .1s linear;transition:background-color .1s linear;margin:0 auto}body.reader-night-mode .image-package .image-container{background-color:#545454}.image-package .image-container-fill{z-index:1}.image-package .image-container .image-view{position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden}.image-package .image-container .image-view-error:after{content:"图片获取失败，请点击重试";position:absolute;top:50%;left:50%;width:100%;-webkit-transform:translate(-50%,-50%);-ms-transform:translate(-50%,-50%);transform:translate(-50%,-50%);color:#888;font-size:14px}.image-package .image-container .image-view img.image-loading{opacity:.3}.image-package .image-container .image-view img{-webkit-transition:all .15s linear;-o-transition:all .15s linear;transition:all .15s linear;z-index:2;opacity:1}</style><style type="text/css">fieldset[disabled] .multiselect {
+  pointer-events: none;
+}
+
+.multiselect__spinner {
+  position: absolute;
+  right: 1px;
+  top: 1px;
+  width: 48px;
+  height: 35px;
+  background: #fff;
+  display: block;
+}
+
+.multiselect__spinner:after,
+.multiselect__spinner:before {
+  position: absolute;
+  content: "";
+  top: 50%;
+  left: 50%;
+  margin: -8px 0 0 -8px;
+  width: 16px;
+  height: 16px;
+  border-radius: 100%;
+  border-color: #41b883 transparent transparent;
+  border-style: solid;
+  border-width: 2px;
+  box-shadow: 0 0 0 1px transparent;
+}
+
+.multiselect__spinner:before {
+  animation: a 2.4s cubic-bezier(.41,.26,.2,.62);
+  animation-iteration-count: infinite;
+}
+
+.multiselect__spinner:after {
+  animation: a 2.4s cubic-bezier(.51,.09,.21,.8);
+  animation-iteration-count: infinite;
+}
+
+.multiselect__loading-enter-active,
+.multiselect__loading-leave-active {
+  transition: opacity .4s ease-in-out;
+  opacity: 1;
+}
+
+.multiselect__loading-enter,
+.multiselect__loading-leave-active {
+  opacity: 0;
+}
+
+.multiselect,
+.multiselect__input,
+.multiselect__single {
+  font-family: inherit;
+  font-size: 14px;
+  -ms-touch-action: manipulation;
+  touch-action: manipulation;
+}
+
+.multiselect {
+  box-sizing: content-box;
+  display: block;
+  position: relative;
+  width: 100%;
+  min-height: 40px;
+  text-align: left;
+  color: #35495e;
+}
+
+.multiselect * {
+  box-sizing: border-box;
+}
+
+.multiselect:focus {
+  outline: none;
+}
+
+.multiselect--disabled {
+  opacity: .6;
+}
+
+.multiselect--active {
+  z-index: 1;
+}
+
+.multiselect--active:not(.multiselect--above) .multiselect__current,
+.multiselect--active:not(.multiselect--above) .multiselect__input,
+.multiselect--active:not(.multiselect--above) .multiselect__tags {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.multiselect--active .multiselect__select {
+  transform: rotate(180deg);
+}
+
+.multiselect--above.multiselect--active .multiselect__current,
+.multiselect--above.multiselect--active .multiselect__input,
+.multiselect--above.multiselect--active .multiselect__tags {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.multiselect__input,
+.multiselect__single {
+  position: relative;
+  display: inline-block;
+  min-height: 20px;
+  line-height: 20px;
+  border: none;
+  border-radius: 5px;
+  background: #fff;
+  padding: 0 0 0 5px;
+  width: 100%;
+  transition: border .1s ease;
+  box-sizing: border-box;
+  margin-bottom: 8px;
+  vertical-align: top;
+}
+
+.multiselect__tag~.multiselect__input,
+.multiselect__tag~.multiselect__single {
+  width: auto;
+}
+
+.multiselect__input:hover,
+.multiselect__single:hover {
+  border-color: #cfcfcf;
+}
+
+.multiselect__input:focus,
+.multiselect__single:focus {
+  border-color: #a8a8a8;
+  outline: none;
+}
+
+.multiselect__single {
+  padding-left: 6px;
+  margin-bottom: 8px;
+}
+
+.multiselect__tags-wrap {
+  display: inline;
+}
+
+.multiselect__tags {
+  min-height: 40px;
+  display: block;
+  padding: 8px 40px 0 8px;
+  border-radius: 5px;
+  border: 1px solid #e8e8e8;
+  background: #fff;
+}
+
+.multiselect__tag {
+  position: relative;
+  display: inline-block;
+  padding: 4px 26px 4px 10px;
+  border-radius: 5px;
+  margin-right: 10px;
+  color: #fff;
+  line-height: 1;
+  background: #41b883;
+  margin-bottom: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 100%;
+  text-overflow: ellipsis;
+}
+
+.multiselect__tag-icon {
+  cursor: pointer;
+  margin-left: 7px;
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  font-weight: 700;
+  font-style: normal;
+  width: 22px;
+  text-align: center;
+  line-height: 22px;
+  transition: all .2s ease;
+  border-radius: 5px;
+}
+
+.multiselect__tag-icon:after {
+  content: "\D7";
+  color: #266d4d;
+  font-size: 14px;
+}
+
+.multiselect__tag-icon:focus,
+.multiselect__tag-icon:hover {
+  background: #369a6e;
+}
+
+.multiselect__tag-icon:focus:after,
+.multiselect__tag-icon:hover:after {
+  color: #fff;
+}
+
+.multiselect__current {
+  min-height: 40px;
+  overflow: hidden;
+  padding: 8px 12px 0;
+  padding-right: 30px;
+  white-space: nowrap;
+  border-radius: 5px;
+  border: 1px solid #e8e8e8;
+}
+
+.multiselect__current,
+.multiselect__select {
+  line-height: 16px;
+  box-sizing: border-box;
+  display: block;
+  margin: 0;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.multiselect__select {
+  position: absolute;
+  width: 40px;
+  height: 38px;
+  right: 1px;
+  top: 1px;
+  padding: 4px 8px;
+  text-align: center;
+  transition: transform .2s ease;
+}
+
+.multiselect__select:before {
+  position: relative;
+  right: 0;
+  top: 65%;
+  color: #999;
+  margin-top: 4px;
+  border-style: solid;
+  border-width: 5px 5px 0;
+  border-color: #999 transparent transparent;
+  content: "";
+}
+
+.multiselect__placeholder {
+  color: #adadad;
+  display: inline-block;
+  margin-bottom: 10px;
+  padding-top: 2px;
+}
+
+.multiselect--active .multiselect__placeholder {
+  display: none;
+}
+
+.multiselect__content-wrapper {
+  position: absolute;
+  display: block;
+  background: #fff;
+  width: 100%;
+  max-height: 240px;
+  overflow: auto;
+  border: 1px solid #e8e8e8;
+  border-top: none;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+  z-index: 1;
+  -webkit-overflow-scrolling: touch;
+}
+
+.multiselect__content {
+  list-style: none;
+  display: inline-block;
+  padding: 0;
+  margin: 0;
+  min-width: 100%;
+  vertical-align: top;
+}
+
+.multiselect--above .multiselect__content-wrapper {
+  bottom: 100%;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  border-bottom: none;
+  border-top: 1px solid #e8e8e8;
+}
+
+.multiselect__content::webkit-scrollbar {
+  display: none;
+}
+
+.multiselect__element {
+  display: block;
+}
+
+.multiselect__option {
+  display: block;
+  padding: 12px;
+  min-height: 40px;
+  line-height: 16px;
+  text-decoration: none;
+  text-transform: none;
+  vertical-align: middle;
+  position: relative;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.multiselect__option:after {
+  top: 0;
+  right: 0;
+  position: absolute;
+  line-height: 40px;
+  padding-right: 12px;
+  padding-left: 20px;
+}
+
+.multiselect__option--highlight {
+  background: #41b883;
+  outline: none;
+  color: #fff;
+}
+
+.multiselect__option--highlight:after {
+  content: attr(data-select);
+  background: #41b883;
+  color: #fff;
+}
+
+.multiselect__option--selected {
+  background: #f3f3f3;
+  color: #35495e;
+  font-weight: 700;
+}
+
+.multiselect__option--selected:after {
+  content: attr(data-selected);
+  color: silver;
+}
+
+.multiselect__option--selected.multiselect__option--highlight {
+  background: #ff6a6a;
+  color: #fff;
+}
+
+.multiselect__option--selected.multiselect__option--highlight:after {
+  background: #ff6a6a;
+  content: attr(data-deselect);
+  color: #fff;
+}
+
+.multiselect--disabled {
+  background: #ededed;
+  pointer-events: none;
+}
+
+.multiselect--disabled .multiselect__current,
+.multiselect--disabled .multiselect__select,
+.multiselect__option--disabled {
+  background: #ededed;
+  color: #a6a6a6;
+}
+
+.multiselect__option--disabled {
+  cursor: text;
+  pointer-events: none;
+}
+
+.multiselect__option--disabled.multiselect__option--highlight {
+  background: #dedede!important;
+}
+
+.multiselect-enter-active,
+.multiselect-leave-active {
+  transition: all .15s ease;
+}
+
+.multiselect-enter,
+.multiselect-leave-active {
+  opacity: 0;
+}
+
+.multiselect__strong {
+  margin-bottom: 8px;
+  line-height: 20px;
+  display: inline-block;
+  vertical-align: top;
+}
+
+[dir=rtl] .multiselect {
+  text-align: right;
+}
+
+[dir=rtl] .multiselect__select {
+  right: auto;
+  left: 1px;
+}
+
+[dir=rtl] .multiselect__tags {
+  padding: 8px 8px 0 40px;
+}
+
+[dir=rtl] .multiselect__content {
+  text-align: right;
+}
+
+[dir=rtl] .multiselect__option:after {
+  right: auto;
+  left: 0;
+}
+
+[dir=rtl] .multiselect__clear {
+  right: auto;
+  left: 12px;
+}
+
+[dir=rtl] .multiselect__spinner {
+  right: auto;
+  left: 1px;
+}
+
+@keyframes a {
+  0% {
+    transform: rotate(0);
+  }
+
+  to {
+    transform: rotate(2turn);
+  }
+}</style><style type="text/css">
+#free-reward-panel .reward-users-modal main {
+  padding: 0;
+}
+</style><style type="text/css">
+@charset "UTF-8";
+/*
+ * 变量
+*/
+.reward-note-modal .v-modal {
+  width: 620px;
+  text-align: center;
+}
+.reward-note-modal .v-modal form {
+    margin: 0 auto 25px auto;
+    padding: 0 40px;
+}
+.reward-note-modal .v-modal .reward-intro {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    font-size: 16px;
+}
+.reward-note-modal .v-modal .reward-intro .avatar {
+      cursor: default !important;
+      width: 36px;
+      height: 36px;
+      margin-right: 10px;
+      display: inline-block;
+}
+.reward-note-modal .v-modal .reward-intro .intro {
+      margin-right: 5px;
+      font-weight: bold;
+      vertical-align: middle;
+}
+.reward-note-modal .v-modal .reward-intro i {
+      color: #EA6F5A;
+      vertical-align: middle;
+}
+.reward-note-modal .v-modal .main-inputs {
+    margin: 25px 0;
+}
+.reward-note-modal .v-modal .main-inputs .amount-group {
+      margin: 0 -5px;
+}
+.reward-note-modal .v-modal .main-inputs .amount-group input {
+        display: none;
+}
+.reward-note-modal .v-modal .main-inputs .amount-group input:checked + .option {
+        color: #EA6F5A;
+        border-color: #EA6F5A;
+}
+.reward-note-modal .v-modal .main-inputs .amount-group .custom-amount:checked + .option .custom-text {
+        opacity: 0;
+}
+.reward-note-modal .v-modal .main-inputs .amount-group .custom-amount:checked + .option .custom-amount-input {
+        opacity: 1;
+}
+.reward-note-modal .v-modal .main-inputs .amount-group .option {
+        position: relative;
+        margin: 0 5px 15px;
+        width: 156px;
+        height: 56px;
+        line-height: 54px;
+        border: 1px solid #E6E6E6;
+        border-radius: 4px;
+        font-weight: normal;
+        color: #999999;
+        cursor: pointer;
+}
+.reward-note-modal .v-modal .main-inputs .amount-group .option i {
+          font-size: 16px;
+          vertical-align: middle;
+}
+.reward-note-modal .v-modal .main-inputs .amount-group .option .amount {
+          font-size: 28px;
+          vertical-align: middle;
+}
+.reward-note-modal .v-modal .main-inputs .amount-group .option .piece {
+          font-size: 13px;
+          vertical-align: sub;
+}
+.reward-note-modal .v-modal .main-inputs .amount-group .option .custom-amount-input {
+          position: absolute;
+          top: 0;
+          z-index: -1;
+          width: 100%;
+          opacity: 0;
+}
+.reward-note-modal .v-modal .main-inputs .amount-group .option .custom-amount-input i {
+            position: absolute;
+            top: 0;
+            left: 10px;
+}
+.reward-note-modal .v-modal .main-inputs .amount-group .option .custom-amount-input .piece {
+            position: absolute;
+            top: 4px;
+            right: 10px;
+}
+.reward-note-modal .v-modal .main-inputs .amount-group .option .custom-amount-input input {
+            display: block;
+            margin: 0 auto;
+            width: 80px;
+            height: 54px;
+            line-height: 54px;
+            border: none;
+            font-size: 28px;
+            text-align: center;
+            background: transparent;
+            -moz-appearance: textfield;
+}
+.reward-note-modal .v-modal .main-inputs .amount-group .option .custom-amount-input input::-webkit-outer-spin-button, .reward-note-modal .v-modal .main-inputs .amount-group .option .custom-amount-input input::-webkit-inner-spin-button {
+              -webkit-appearance: none !important;
+}
+.reward-note-modal .v-modal .main-inputs .message {
+      padding: 15px 20px;
+      margin-bottom: 0;
+      font-size: 14px;
+      border: 1px solid #E6E6E6;
+      color: #333333;
+      border-radius: 4px;
+      background-color: rgba(180, 180, 180, 0.1);
+}
+.reward-note-modal .v-modal .main-inputs .message textarea {
+        width: 100%;
+        height: 44px;
+        padding: 0;
+        margin: 0;
+        resize: none;
+        background: none !important;
+        border: none !important;
+        -webkit-box-sizing: border-box;
+                box-sizing: border-box;
+        -webkit-box-shadow: none;
+                box-shadow: none;
+}
+.reward-note-modal .v-modal .main-inputs .message textarea:focus {
+          outline: none;
+}
+.reward-note-modal .v-modal .reward-info .amount {
+    font-size: 28px;
+    font-weight: bold;
+    color: #EA6F5A;
+}
+.reward-note-modal .v-modal .reward-info .pay-method {
+    font-size: 14px;
+}
+.reward-note-modal .v-modal .reward-info .pay-method a {
+      color: #3194D0;
+}
+.reward-note-modal .v-modal .choose-pay {
+    margin: 0 -5px;
+}
+.reward-note-modal .v-modal .choose-pay input {
+      display: none;
+}
+.reward-note-modal .v-modal .choose-pay input:checked + .option {
+      color: #EA6F5A;
+      border-color: #EA6F5A;
+}
+.reward-note-modal .v-modal .choose-pay .option {
+      margin: 20px 5px 10px;
+      width: 156px;
+      height: 56px;
+      line-height: 54px;
+      text-align: center;
+      border: 1px solid #E6E6E6;
+      border-radius: 4px;
+      cursor: pointer;
+}
+.reward-note-modal .v-modal .choose-pay .option img {
+        height: 30px;
+}
+.reward-note-modal .v-modal .choose-pay .option img.day.alipay, .reward-note-modal .v-modal .choose-pay .option img.night.alipay {
+        min-width: 85px;
+}
+.reward-note-modal .v-modal .choose-pay .option img.day.wechat, .reward-note-modal .v-modal .choose-pay .option img.night.wechat {
+        min-width: 112px;
+}
+.reward-note-modal .v-modal .choose-pay .option img.night {
+        display: none;
+}
+body.reader-night-mode .reward-note-modal .v-modal .choose-pay .option img.night {
+        display: inline-block;
+}
+body.reader-night-mode .reward-note-modal .v-modal .choose-pay .option img.day {
+        display: none;
+}
+.reward-note-modal .v-modal .choose-pay .tooltip {
+      width: 230px;
+}
+.reward-note-modal .v-modal .modal-footer {
+    padding: 0 15px 20px;
+    border: none;
+    background-color: transparent;
+    text-align: center;
+}
+.reward-note-modal .v-modal .modal-footer .btn {
+      padding: 8px 45px;
+      font-size: 24px;
+}
+.reward-note-modal .v-modal .btn-pay {
+    padding: 8px 25px;
+    font-size: 16px;
+    color: #ffffff;
+    background-color: #F5A623;
+}
+.weixin-pay, .success-pay {
+  text-align: center;
+}
+.weixin-pay .v-modal, .success-pay .v-modal {
+    width: 350px;
+}
+.weixin-pay .ic-successed, .success-pay .ic-successed {
+    font-size: 60px;
+    color: #3db922;
+}
+.weixin-pay h2, .weixin-pay h3, .success-pay h2, .success-pay h3 {
+    margin-bottom: 20px;
+    color: #333333;
+}
+.weixin-pay h2, .success-pay h2 {
+    margin: 0 0 40px 0;
+    font-size: 24px;
+}
+.weixin-pay .bind-text, .success-pay .bind-text {
+    position: relative;
+    margin-bottom: 30px;
+    font-size: 14px;
+    color: #999999;
+}
+.weixin-pay .bind-text:before, .weixin-pay .bind-text:after, .success-pay .bind-text:before, .success-pay .bind-text:after {
+      content: "";
+      border-top: 1px solid #999;
+      display: block;
+      position: absolute;
+      width: 40px;
+      top: 8px;
+}
+.weixin-pay .bind-text:before, .success-pay .bind-text:before {
+      left: 30px;
+}
+.weixin-pay .bind-text:after, .success-pay .bind-text:after {
+      right: 30px;
+}
+.weixin-pay .share-bind, .success-pay .share-bind {
+    display: block;
+    margin-bottom: 30px;
+}
+.weixin-pay .share-bind i, .success-pay .share-bind i {
+      margin-right: 4px;
+      font-size: 22px;
+      vertical-align: middle;
+}
+.weixin-pay .share-bind.wechat i, .success-pay .share-bind.wechat i {
+      color: #00BB29;
+}
+.weixin-pay .share-bind.weibo i, .success-pay .share-bind.weibo i {
+      color: #E05244;
+}
+.weixin-pay .wx-qr-code, .success-pay .wx-qr-code {
+    display: inline-block;
+}
+.weixin-pay .wx-qr-code img, .success-pay .wx-qr-code img {
+      margin: 0 auto;
+      padding: 10px;
+      width: 200px;
+      background-color: #ffffff;
+}
+.weixin-pay .pay-amount, .success-pay .pay-amount {
+    margin: 20px 0;
+    color: #787878;
+}
+.weixin-pay .pay-amount span, .success-pay .pay-amount span {
+      color: #F5A623;
+}
+</style><style type="text/css">
+@charset "UTF-8";
+/*
+ * 变量
+*/
+.v-modal-wrap {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  background-color: transparent;
+}
+.v-modal-wrap.modal-leave-active {
+    -webkit-transition: opacity 0.3s;
+    -o-transition: opacity 0.3s;
+    transition: opacity 0.3s;
+}
+.v-modal-wrap.modal-enter-active .v-modal-mask, .v-modal-wrap.modal-leave-active .v-modal-mask {
+    opacity: 0;
+}
+.v-modal-wrap.modal-enter-active .v-modal, .v-modal-wrap.modal-leave-active .v-modal {
+    -webkit-transform: translate(-50%, -70%);
+        -ms-transform: translate(-50%, -70%);
+            transform: translate(-50%, -70%);
+    opacity: 0;
+}
+.v-modal-wrap .v-modal-mask {
+    background-color: rgba(255, 255, 255, 0.7);
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    -webkit-transition: opacity 0.3s;
+    -o-transition: opacity 0.3s;
+    transition: opacity 0.3s;
+    opacity: 1;
+}
+.v-modal-wrap .v-modal {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    -webkit-transform: translate(-50%, -50%);
+        -ms-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);
+    border-radius: 6px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    -webkit-box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+    -webkit-transition: opacity 0.3s, -webkit-transform 0.3s;
+    transition: opacity 0.3s, -webkit-transform 0.3s;
+    -o-transition: opacity 0.3s, transform 0.3s;
+    transition: opacity 0.3s, transform 0.3s;
+    transition: opacity 0.3s, transform 0.3s, -webkit-transform 0.3s;
+    opacity: 1;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -webkit-flex-direction: column;
+        -ms-flex-direction: column;
+            flex-direction: column;
+    overflow: hidden;
+}
+.v-modal-wrap .v-modal > header:before, .v-modal-wrap .v-modal > header:after, .v-modal-wrap .v-modal > main:before, .v-modal-wrap .v-modal > main:after, .v-modal-wrap .v-modal > footer:before, .v-modal-wrap .v-modal > footer:after {
+      content: '';
+      clear: both;
+      display: table;
+}
+.v-modal-wrap .v-modal > header {
+      padding: 20px;
+      border-bottom: 1px solid #F0F0F0;
+}
+.v-modal-wrap .v-modal > header h4 {
+        margin: 0;
+        color: #333;
+        text-align: left;
+}
+.v-modal-wrap .v-modal .close {
+      position: absolute;
+      right: 16px;
+      top: 20px;
+      font-size: 26px;
+      line-height: 20px;
+      color: rgba(0, 0, 0, 0.8);
+}
+.v-modal-wrap .v-modal .close:hover {
+        color: #000000;
+}
+.v-modal-wrap .v-modal > main {
+      padding: 20px 20px 20px 20px;
+      font-size: 15px;
+      color: #333;
+      -webkit-box-flex: 1;
+      -webkit-flex-grow: 1;
+          -ms-flex-positive: 1;
+              flex-grow: 1;
+      overflow-x: hidden;
+      overflow-y: auto;
+}
+.v-modal-wrap .v-modal > footer {
+      padding: 20px;
+      background-color: #fff;
+}
+.v-modal-wrap .v-modal > footer button {
+        padding: 0;
+        margin: 0;
+        background-color: transparent;
+        border: 0;
+        float: right;
+}
+.v-modal-wrap .v-modal > footer button:focus {
+          outline: 0;
+}
+.v-modal-wrap .v-modal > footer .submit {
+        padding: 4px 12px;
+        border: 1px solid;
+        border-radius: 20px;
+}
+.v-modal-wrap .v-modal > footer .cancel {
+        margin-top: 5px;
+}
+.v-modal-wrap .v-modal > footer .cancel:hover {
+          color: #333333;
+}
+.reader-night-mode .v-modal-wrap .v-modal-mask {
+  background-color: rgba(63, 63, 63, 0.7);
+}
+.reader-night-mode .v-modal-wrap .v-modal {
+  background-color: #3f3f3f;
+}
+.reader-night-mode .v-modal-wrap .v-modal header {
+    border-color: #2F2F2F;
+}
+.reader-night-mode .v-modal-wrap .v-modal header h4 {
+      color: #C8C8C8;
+}
+.reader-night-mode .v-modal-wrap .v-modal .close {
+    color: #C8C8C8;
+}
+.reader-night-mode .v-modal-wrap .v-modal .close:hover {
+      color: #ffffff;
+}
+.reader-night-mode .v-modal-wrap .v-modal main {
+    color: #C8C8C8;
+}
+.reader-night-mode .v-modal-wrap .v-modal footer {
+    background-color: #3f3f3f;
+}
+.reader-night-mode .v-modal-wrap .v-modal footer .cancel:hover {
+      color: #C8C8C8;
+}
+</style><style type="text/css">
+@charset "UTF-8";
+/*
+ * 变量
+*/
+.youdao-fixed-ad {
+  display: block;
+  position: relative;
+  width: 180px;
+  height: 180px;
+}
+.youdao-fixed-ad .img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+}
+.youdao-fixed-ad .ad-badge {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    display: block;
+    font-size: 12px;
+    padding: 2px 5px 0 6px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    cursor: pointer;
+}
+</style><style type="text/css">
+.yuxi-fixed-ad {
+  position: relative;
+  width: 180px;
+  height: 180px;
+}
+.yuxi-fixed-ad .img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+    background-image: url(//cdn2.jianshu.io/assets/web/yuxi-ads-d73b364baf42dfeca32d518c819a0136.jpg);
+}
+.yuxi-fixed-ad .ad-badge {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    display: block;
+    font-size: 12px;
+    padding: 2px 5px 0 6px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    cursor: pointer;
+}
+</style><style type="text/css">
+@charset "UTF-8";
+/*
+ * 变量
+*/
+.like[data-v-6ddd02c6] {
+  display: inline-block;
+}
+.like .like-group[data-v-6ddd02c6] {
+    position: relative;
+    padding: 13px 0 15px 0;
+    font-size: 0;
+    border: 1px solid #EA6F5A;
+    border-radius: 40px;
+}
+.like .like-group[data-v-6ddd02c6]:hover {
+      background-color: rgba(236, 97, 73, 0.05);
+}
+.like .like-group .btn-like[data-v-6ddd02c6] {
+      display: inline-block;
+      font-size: 19px;
+}
+.like .like-group .btn-like[data-v-6ddd02c6]:before {
+        content: '';
+        position: absolute;
+        left: 12px;
+        top: 2px;
+        width: 50px;
+        height: 50px;
+        background-image: url(//cdn2.jianshu.io/assets/web/like_animation_steps-62a00a7b52377d3069927cdb8e61fd34.png);
+        background-position: left;
+        background-repeat: no-repeat;
+        background-size: 1000px 50px;
+}
+.like .like-group .btn-like a[data-v-6ddd02c6] {
+        position: relative;
+        padding: 18px 30px 18px 55px;
+        color: #EA6F5A;
+}
+.like .like-group .modal-wrap[data-v-6ddd02c6] {
+      font-size: 18px;
+      border-left: 1px solid rgba(236, 97, 73, 0.4);
+      display: inline-block;
+      margin-left: -15px;
+}
+.like .like-group .modal-wrap a[data-v-6ddd02c6] {
+        color: #EA6F5A;
+        padding: 18px 26px 18px 18px;
+}
+.like .like-group.like-animation[data-v-6ddd02c6], .like .like-group.active[data-v-6ddd02c6] {
+      background-color: #EA6F5A;
+}
+.like .like-group.like-animation .btn-like a[data-v-6ddd02c6], .like .like-group.active .btn-like a[data-v-6ddd02c6] {
+        color: white;
+}
+.like .like-group.like-animation .modal-wrap[data-v-6ddd02c6], .like .like-group.active .modal-wrap[data-v-6ddd02c6] {
+        border-left: 1px solid white;
+}
+.like .like-group.like-animation .modal-wrap a[data-v-6ddd02c6], .like .like-group.active .modal-wrap a[data-v-6ddd02c6] {
+          color: white;
+}
+.like .like-group.like-animation .btn-like[data-v-6ddd02c6]:before {
+      -webkit-animation: likeBlast-data-v-6ddd02c6 0.6s 1 steps(19);
+              animation: likeBlast-data-v-6ddd02c6 0.6s 1 steps(19);
+      background-position: right;
+}
+@-webkit-keyframes likeBlast {
+0% {
+    background-position: left;
+}
+100% {
+    background-position: right;
+}
+}
+@keyframes likeBlast-data-v-6ddd02c6 {
+0% {
+    background-position: left;
+}
+100% {
+    background-position: right;
+}
+}
+.like .like-group.active .btn-like[data-v-6ddd02c6]:before {
+      background-position: right;
+}
+</style><style type="text/css">
+@charset "UTF-8";
+/*
+ * 变量
+*/
+.main {
+  position: relative;
+  margin: 0 auto;
+  padding: 0 0 30px 0;
+  width: 620px;
+}
+.main .title {
+    padding-left: 8px;
+    border-left: 3px solid #EA6F5A;
+    line-height: 1;
+    font-size: 15px;
+}
+.main .collection-settings {
+    position: absolute;
+    top: 2px;
+    right: 0;
+    font-size: 13px;
+    color: #A0A0A0;
+}
+.main .collection-settings span {
+      padding-left: 4px;
+}
+.main .include-collection {
+    width: 100%;
+    padding-top: 20px;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: horizontal;
+    -webkit-box-direction: normal;
+    -webkit-flex-direction: row;
+        -ms-flex-direction: row;
+            flex-direction: row;
+    -webkit-box-pack: start;
+    -webkit-justify-content: flex-start;
+        -ms-flex-pack: start;
+            justify-content: flex-start;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+        -ms-flex-align: center;
+            align-items: center;
+    -webkit-flex-wrap: wrap;
+        -ms-flex-wrap: wrap;
+            flex-wrap: wrap;
+}
+.main .include-collection .item {
+      display: inline-block;
+      margin: 0 12px 12px 0;
+      min-height: 32px;
+      background-color: white;
+      border: 1px solid #DCDCDC;
+      border-radius: 4px;
+      vertical-align: top;
+      overflow: hidden;
+}
+.main .include-collection .item img {
+        width: 32px;
+        height: 32px;
+}
+.main .include-collection .item .name {
+        display: inline-block;
+        padding: 0 10px;
+        font-size: 14px;
+}
+.main .include-collection .add-collection-wrap {
+      margin: 0 12px 12px 0;
+}
+.main .include-collection .add-collection {
+      padding: 8px 12px;
+      font-size: 14px;
+      border: 1px solid #DCDCDC;
+      border-radius: 4px;
+}
+.main .include-collection .add-collection i {
+        margin-right: 4px;
+        color: #969696;
+}
+.main .recommend-note a {
+    position: relative;
+    margin: 20px 2px 0 0;
+    width: 200px;
+    height: 160px;
+    display: inline-block;
+}
+.main .recommend-note a:after {
+      content: "";
+      position: absolute;
+      width: 200px;
+      height: 160px;
+      border-radius: 0 0 4px 4px;
+      -webkit-box-shadow: inset 0px -80px 50px -22px rgba(0, 0, 0, 0.6);
+              box-shadow: inset 0px -80px 50px -22px rgba(0, 0, 0, 0.6);
+      top: 0;
+      left: 0;
+      z-index: 1;
+}
+.main .recommend-note .name {
+    position: absolute;
+    bottom: 40px;
+    left: 10px;
+    right: 10px;
+    font-size: 17px;
+    font-weight: bold;
+    color: #ffffff;
+    z-index: 2;
+}
+.main .recommend-note .author {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    z-index: 2;
+}
+.main .recommend-note .avatar {
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+}
+.main .recommend-note .avatar img {
+      border-radius: 50%;
+}
+.main .recommend-note .author-name {
+    font-size: 12px;
+    color: #ffffff;
+    display: inline-block;
+    vertical-align: -1px;
+}
+.main .show-more {
+    margin: 0 12px 12px 0;
+    font-size: 14px;
+    color: #A0A0A0;
+}
+</style></head>
+
+  <!-- 只给10%的用户添加代码 -->
+  <!-- ###第四范式-智能推荐：代码直接复制 无需修改参数### -->
+  <!-- ###功能：上报内容并反馈用户行为### -->
+  <!--
+  -->
+  <body class="reader-black-font" lang="zh-CN">
+    <!-- 全局顶部导航栏 -->
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+  <div class="width-limit">
+    <!-- 左上方 Logo -->
+    <a class="logo" href="https://www.jianshu.com/"><img src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/nav-logo-4c7bbafe27adc892f3046e6978459bac.png" alt="Nav logo"></a>
+
+    <!-- 右上角 -->
+      <!-- 未登录显示登录/注册/写文章 -->
+      <a class="btn write-btn" target="_blank" href="https://www.jianshu.com/writer#/">
+        <i class="iconfont ic-write"></i>写文章
+</a>      <a class="btn sign-up" id="sign_up" href="https://www.jianshu.com/sign_up">注册</a>
+      <a class="btn log-in" id="sign_in" href="https://www.jianshu.com/sign_in">登录</a>
+
+    <!-- 如果用户登录，显示下拉菜单 -->
+
+    <div class="style-mode"><a class="style-mode-btn"><i class="iconfont ic-navigation-mode"></i></a> <div class="popover-modal" style="left: 0px; display: none;"><div class="meta"><i class="iconfont ic-navigation-night"></i><span>夜间模式</span></div> <div class="switch day-night-group"><a class="switch-btn">开</a> <a class="switch-btn active">关</a></div> <hr> <div class="switch font-family-group"><a class="switch-btn font-song">宋体</a> <a class="switch-btn font-hei active">黑体</a></div> <div class="switch"><a class="switch-btn active">简</a> <a class="switch-btn">繁</a></div></div></div>
+    <div class="container">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#menu" aria-expanded="false">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+      </div>
+      <div class="collapse navbar-collapse" id="menu">
+        <ul class="nav navbar-nav">
+            <li class="tab ">
+              <a href="https://www.jianshu.com/">
+                <span class="menu-text">首页</span><i class="iconfont ic-navigation-discover menu-icon"></i>
+</a>            </li>
+            <li class="tab ">
+              <a id="web-nav-app-download-btn" class="app-download-btn" href="https://www.jianshu.com/apps?utm_medium=desktop&amp;utm_source=navbar-apps"><span class="menu-text">下载App</span><i class="iconfont ic-navigation-download menu-icon"></i></a>
+            </li>
+          <li class="search">
+            <form target="_blank" action="/search" accept-charset="UTF-8" method="get"><input name="utf8" type="hidden" value="✓">
+              <input type="text" name="q" id="q" autocomplete="off" placeholder="搜索" class="search-input">
+              <a class="search-btn" href="javascript:void(null)"><i class="iconfont ic-search"></i></a>
+</form>          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>
+
+    
+<div class="note">
+  <div id="note-fixed-ad-container">
+    <div id="fixed-ad-container">
+      <div style="display: block;"><a target="_blank" href="https://www.jianshu.com/apps/redirect?utm_source=side-banner-click" id="web-note-ad-fixed"><span class="close">×</span></a></div>
+      <!---->
+      <a href="http://e.cn.miaozhen.com/r/k=2110413&amp;p=7L9Gn&amp;dx=__IPDX__&amp;rt=2&amp;ns=__IP__&amp;ni=__IESID__&amp;v=__LOC__&amp;xa=__ADPLATFORM__&amp;tr=__REQUESTID__&amp;mo=__OS__&amp;m0=__OPENUDID__&amp;m0a=__DUID__&amp;m1=__ANDROIDID1__&amp;m1a=__ANDROIDID__&amp;m2=__IMEI__&amp;m4=__AAID__&amp;m5=__IDFA__&amp;m6=__MAC1__&amp;m6a=__MAC__&amp;vo=3f2e070eb&amp;vr=2&amp;o=https%3A%2F%2Fwww.jianshu.com%2Fp%2Fee05f7eff678" target="_blank" class="yuxi-fixed-ad" style="display: none;"><div class="img"></div> <span class="ad-badge">广告</span></a>
+      <div id="_so_pdsBy_0"></div>
+    </div>
+  </div>
+  <div class="post">
+    <div class="article">
+        <h1 class="title">Golang 学习笔记（06）—— 多线程</h1>
+
+        <!-- 作者区域 -->
+        <div class="author">
+          <a class="avatar" href="https://www.jianshu.com/u/9ae5f8ac96ef">
+            <img src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/62beb254-4838-4837-b2a7-a227e8005020.jpg" alt="96">
+</a>          <div class="info">
+            <span class="name"><a href="https://www.jianshu.com/u/9ae5f8ac96ef">ChainZhang</a></span>
+            <!-- 关注用户按钮 -->
+            <a class="btn btn-success follow"><i class="iconfont ic-follow"></i><span>关注</span></a>
+            <!-- 文章数据信息 -->
+            <div class="meta">
+              <!-- 简书钻 -->
+                <span class="jsd-meta">
+                  <i class="iconfont ic-paid1"></i> 0.6
+                </span>
+              <!-- 如果文章更新时间大于发布时间，那么使用 tooltip 显示更新时间 -->
+                <span class="publish-time" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="最后编辑于 2018.01.03 14:08">2017.12.26 17:24*</span>
+              <span class="wordage">字数 1165</span>
+            <span class="views-count">阅读 6320</span><span class="comments-count">评论 3</span><span class="likes-count">喜欢 13</span></div>
+          </div>
+          <!-- 如果是当前作者，加入编辑按钮 -->
+        </div>
+
+
+        <!-- 文章内容 -->
+        <div data-note-content="" class="show-content">
+          <div class="show-content-free">
+            <p>本文为转载，原文：<a href="https://link.jianshu.com/?t=http%3A%2F%2Fwww.chairis.cn%2Fblog%2Farticle%2F60" target="_blank" rel="nofollow">Golang 学习笔记（06）—— 多线程</a></p>
+<div class="image-package">
+<div class="image-container" style="max-width: 700px; max-height: 500px; background-color: transparent;">
+<div class="image-container-fill" style="padding-bottom: 55.620000000000005%;"></div>
+<div class="image-view" data-width="899" data-height="500"><img data-original-src="//upload-images.jianshu.io/upload_images/4822713-b232668346562fe5.png" data-original-width="899" data-original-height="500" data-original-format="image/png" data-original-filesize="429038" style="cursor: zoom-in;" class="" src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/4822713-b232668346562fe5.png"></div>
+</div>
+<div class="image-caption">Golang</div>
+</div>
+<h1>介绍</h1>
+<p>线程是cpu调度的最小单位，只有不同的线程才能同时在多核cpu上同时运行。但线程太占资源，线程调度开销大。go中的goroutine是一个轻量级的线程，执行时只需要4-5k的内存，比线程更易用，更高效，更轻便，调度开销比线程小，可同时运行上千万个并发。<br>
+go语言中开启一个goroutine非常简单，go函数名（），就开启了个线程。</p>
+<p>默认情况下，调度器仅使用单线程，要想发挥多核处理器的并行处理能力，必须调用runtine.GOMAXPROCS(n)来设置可并发的线程数，也可以通过设置环境变量GOMAXPROCS打到相同的目的。</p>
+<h1>goroutine</h1>
+<p>Runtime包中提供了几个与goroutine相关的函数。Gosched()让当前正在执行的goroutine放弃CPU执行权限。调度器安排其他正在等待的线程运行。<br>
+请看以下例子：</p>
+<pre class="hljs java"><code class="java"><span class="hljs-function"><span class="hljs-keyword">package</span> main
+
+<span class="hljs-title">import</span> <span class="hljs-params">(
+    <span class="hljs-string">"runtime"</span>
+    <span class="hljs-string">"fmt"</span>
+)</span>
+
+func <span class="hljs-title">main</span><span class="hljs-params">()</span></span>{
+    <span class="hljs-function">go <span class="hljs-title">sayHello</span><span class="hljs-params">()</span>
+    go <span class="hljs-title">sayWorld</span><span class="hljs-params">()</span>
+    var str string
+    fmt.<span class="hljs-title">Scan</span><span class="hljs-params">(&amp;str)</span>
+}
+
+func <span class="hljs-title">sayHello</span><span class="hljs-params">()</span></span>{
+    <span class="hljs-keyword">for</span> i := <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">10</span>; i++{
+        fmt.Print(<span class="hljs-string">"hello "</span>)
+        runtime.Gosched()
+    }
+}
+
+<span class="hljs-function">func <span class="hljs-title">sayWorld</span><span class="hljs-params">()</span></span>{
+    <span class="hljs-keyword">for</span> i := <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">10</span>; i++ {
+        fmt.Println(<span class="hljs-string">"world"</span>)
+        runtime.Gosched()
+    }
+}
+</code></pre>
+<div class="image-package">
+<div class="image-container" style="max-width: 700px; max-height: 285px; background-color: transparent;">
+<div class="image-container-fill" style="padding-bottom: 37.85%;"></div>
+<div class="image-view" data-width="753" data-height="285"><img data-original-src="//upload-images.jianshu.io/upload_images/4822713-8cfdde9480a3907d.png" data-original-width="753" data-original-height="285" data-original-format="image/png" data-original-filesize="15254" style="cursor: zoom-in;" class="" src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/4822713-8cfdde9480a3907d.jpg"></div>
+</div>
+<div class="image-caption">运行结果</div>
+</div>
+<p>从上面输出结果可知，我们启动了两个线程，其中一个线程输出一句后调用Gosched函数，释放CPU权限；之后另一个线程获得CPU权限。这样两个线程交替获得cpu权限，才输出了以上结果。</p>
+<p>runtime.NumCPU()返回了cpu核数，runtime.NumGoroutine()返回当前进程的goroutine线程数。即便我们没有开启新的goroutine。</p>
+<pre class="hljs java"><code class="java"><span class="hljs-function"><span class="hljs-keyword">package</span> main
+
+<span class="hljs-title">import</span> <span class="hljs-params">(
+    <span class="hljs-string">"runtime"</span>
+    <span class="hljs-string">"fmt"</span>
+)</span>
+func <span class="hljs-title">main</span><span class="hljs-params">()</span></span>{
+    fmt.Println(runtime.NumCPU())
+    fmt.Println(runtime.NumGoroutine())
+}
+</code></pre>
+<div class="image-package">
+<div class="image-container" style="max-width: 700px; max-height: 90px; background-color: transparent;">
+<div class="image-container-fill" style="padding-bottom: 11.83%;"></div>
+<div class="image-view" data-width="761" data-height="90"><img data-original-src="//upload-images.jianshu.io/upload_images/4822713-295bde8426f0d27f.png" data-original-width="761" data-original-height="90" data-original-format="image/png" data-original-filesize="4847" style="cursor: zoom-in;" class="" src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/4822713-295bde8426f0d27f.jpg"></div>
+</div>
+<div class="image-caption">运行结果</div>
+</div>
+<p>runtime.Goexit()函数用于终止当前的goroutine，单defer函数将会继续被调用。</p>
+<pre class="hljs java"><code class="java"><span class="hljs-function"><span class="hljs-keyword">package</span> main
+
+<span class="hljs-title">import</span> <span class="hljs-params">(
+    <span class="hljs-string">"runtime"</span>
+    <span class="hljs-string">"fmt"</span>
+)</span>
+
+func <span class="hljs-title">test</span><span class="hljs-params">()</span></span>{
+    <span class="hljs-function">defer <span class="hljs-title">func</span><span class="hljs-params">()</span></span>{
+        fmt.Println(<span class="hljs-string">" in defer"</span>)
+    }()
+    <span class="hljs-keyword">for</span> i := <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">10</span>; i++{
+        fmt.Print(i)
+        <span class="hljs-keyword">if</span> i &gt; <span class="hljs-number">5</span>{
+            runtime.Goexit()
+        }
+    }
+}
+
+<span class="hljs-function">func <span class="hljs-title">main</span><span class="hljs-params">()</span></span>{
+    <span class="hljs-function">go <span class="hljs-title">test</span><span class="hljs-params">()</span>
+    var str string
+    fmt.<span class="hljs-title">Scan</span><span class="hljs-params">(&amp;str)</span>
+}
+</span></code></pre>
+<div class="image-package">
+<div class="image-container" style="max-width: 700px; max-height: 75px; background-color: transparent;">
+<div class="image-container-fill" style="padding-bottom: 9.379999999999999%;"></div>
+<div class="image-view" data-width="800" data-height="75"><img data-original-src="//upload-images.jianshu.io/upload_images/4822713-eee73f9e685c5af8.png" data-original-width="800" data-original-height="75" data-original-format="image/png" data-original-filesize="5627" style="cursor: zoom-in;" class="" src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/4822713-eee73f9e685c5af8.jpg"></div>
+</div>
+<div class="image-caption">运行结果</div>
+</div>
+<p>在这里大家或许有个疑问，下面这两句代码干嘛的呢</p>
+<pre class="hljs cpp"><code class="cpp">var str <span class="hljs-built_in">string</span>
+fmt.Scan(&amp;str)
+</code></pre>
+<p>这两句代码是等待输入的意思，在这里用来阻止主线程关闭的。如果没有这两句的话，会发现我们的程序瞬间就结束了，而且什么都没有输出。这是因为主线程关闭之后，所有开启的goroutine都会强制关闭，他还没有来得及输出，就结束了。<br>
+但是这样感觉怪怪的。如果有一种机制，在子线程结束的时候通知一下主线程，然后主线程再关闭，岂不是更好，这样就不用无休止的等待了。于是就有了<code>channel</code>。</p>
+<h1>channel</h1>
+<p>goroutine之间通过channel来通讯，可以认为channel是一个管道或者先进先出的队列。你可以从一个goroutine中向channel发送数据，在另一个goroutine中取出这个值。<br>
+使用<code>make</code>创建</p>
+<pre class="hljs cpp"><code class="cpp">var channel chan <span class="hljs-keyword">int</span> = make(chan <span class="hljs-keyword">int</span>)
+<span class="hljs-comment">// 或</span>
+channel := make(chan <span class="hljs-keyword">int</span>)
+</code></pre>
+<p>生产者/消费者是最经典的使用示例。生产者goroutine负责将数据放入channel，消费者goroutine从channel中取出数据进行处理。</p>
+<pre class="hljs java"><code class="java"><span class="hljs-function"><span class="hljs-keyword">package</span> main
+
+<span class="hljs-title">import</span> <span class="hljs-params">(
+    <span class="hljs-string">"fmt"</span>
+)</span>
+
+func <span class="hljs-title">main</span><span class="hljs-params">()</span></span>{
+    buf:=make(chan <span class="hljs-keyword">int</span>)
+    flg := make(chan <span class="hljs-keyword">int</span>)
+    <span class="hljs-function">go <span class="hljs-title">producer</span><span class="hljs-params">(buf)</span>
+    go <span class="hljs-title">consumer</span><span class="hljs-params">(buf, flg)</span>
+    &lt;-flg <span class="hljs-comment">//等待接受完成</span>
+}
+
+func <span class="hljs-title">producer</span><span class="hljs-params">(c chan <span class="hljs-keyword">int</span>)</span></span>{
+    <span class="hljs-function">defer <span class="hljs-title">close</span><span class="hljs-params">(c)</span> <span class="hljs-comment">// 关闭channel</span>
+    <span class="hljs-keyword">for</span> i :</span>= <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">10</span>; i++{
+        c &lt;- i <span class="hljs-comment">// 阻塞，直到数据被消费者取走后，才能发送下一条数据</span>
+    }
+}
+
+<span class="hljs-function">func <span class="hljs-title">consumer</span><span class="hljs-params">(c, f chan <span class="hljs-keyword">int</span>)</span></span>{
+    <span class="hljs-keyword">for</span>{
+        <span class="hljs-keyword">if</span> v, ok := &lt;-c; ok{
+            fmt.Print(v) <span class="hljs-comment">// 阻塞，直到生产者放入数据后继续读取数据</span>
+        }<span class="hljs-keyword">else</span>{
+            <span class="hljs-keyword">break</span>
+        }
+    }
+    f&lt;-<span class="hljs-number">1</span> <span class="hljs-comment">//发送数据，通知main函数已接受完成</span>
+}
+</code></pre>
+<p></p><div class="image-package">
+<div class="image-container" style="max-width: 700px; max-height: 60px; background-color: transparent;">
+<div class="image-container-fill" style="padding-bottom: 7.35%;"></div>
+<div class="image-view" data-width="816" data-height="60"><img data-original-src="//upload-images.jianshu.io/upload_images/4822713-672b9046c25db9ae.png" data-original-width="816" data-original-height="60" data-original-format="image/png" data-original-filesize="5269" style="cursor: zoom-in;" class="" src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/4822713-672b9046c25db9ae.jpg"></div>
+</div>
+<div class="image-caption">运行结果</div>
+</div><br>
+可以将channel指定为单向通信。比如<code>&lt;-chan int</code>仅能接收，<code>chan&lt;-int</code>仅能发送。之前的生产者消费者可以改为一下方式：<p></p>
+<pre class="hljs java"><code class="java"><span class="hljs-function">func <span class="hljs-title">producer</span><span class="hljs-params">(c chan&lt;-<span class="hljs-keyword">int</span>)</span></span>{
+    <span class="hljs-function">defer <span class="hljs-title">close</span><span class="hljs-params">(c)</span> <span class="hljs-comment">// 关闭channel</span>
+    <span class="hljs-keyword">for</span> i :</span>= <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">10</span>; i++{
+        c &lt;- i <span class="hljs-comment">// 阻塞，直到数据被消费者取走后，才能发送下一条数据</span>
+    }
+}
+
+<span class="hljs-function">func <span class="hljs-title">consumer</span><span class="hljs-params">(c &lt;-chan <span class="hljs-keyword">int</span>, f chan&lt;-<span class="hljs-keyword">int</span>)</span></span>{
+    <span class="hljs-keyword">for</span>{
+        <span class="hljs-keyword">if</span> v, ok := &lt;-c; ok{
+            fmt.Print(v) <span class="hljs-comment">// 阻塞，直到生产者放入数据后继续读取数据</span>
+        }<span class="hljs-keyword">else</span>{
+            <span class="hljs-keyword">break</span>
+        }
+    }
+    f&lt;-<span class="hljs-number">1</span> <span class="hljs-comment">//发送数据，通知main函数已接受完成</span>
+}
+</code></pre>
+<p>channle可以是带缓冲的。make的第二个参数作为缓冲长度来初始化一个带缓冲的channel:</p>
+<pre class="hljs cpp"><code class="cpp">c := make(chan <span class="hljs-keyword">int</span>, <span class="hljs-number">5</span>)
+</code></pre>
+<p>向带缓冲的channel发送数据时，只有缓冲区满时，发送操作才会被阻塞。当缓冲区空时，接收才会阻塞。<br>
+可以通过以下程序调整发送和接收的顺序调试</p>
+<pre class="hljs css"><code class="css"><span class="hljs-selector-tag">package</span> <span class="hljs-selector-tag">main</span>
+
+<span class="hljs-selector-tag">import</span> (
+    "<span class="hljs-selector-tag">fmt</span>"
+)
+
+<span class="hljs-selector-tag">func</span> <span class="hljs-selector-tag">main</span>(){
+    <span class="hljs-attribute">c </span>:= <span class="hljs-built_in">make</span>(chan int, 2)
+    c &lt;- <span class="hljs-number">1</span>
+    c &lt;- <span class="hljs-number">2</span>
+    fmt.<span class="hljs-built_in">Println</span>(&lt;-c)
+    fmt.<span class="hljs-built_in">Println</span>(&lt;-c)
+}
+</code></pre>
+<h2>select</h2>
+<p>如果有多个channel需要监听，可以考虑用select,随机处理一个可用的channel</p>
+<pre class="hljs java"><code class="java"><span class="hljs-function"><span class="hljs-keyword">package</span> main
+
+<span class="hljs-title">import</span> <span class="hljs-params">(
+    <span class="hljs-string">"fmt"</span>
+)</span>
+
+func <span class="hljs-title">main</span><span class="hljs-params">()</span></span>{
+    c := make(chan <span class="hljs-keyword">int</span>)
+    quit := make(chan <span class="hljs-keyword">int</span>)
+    <span class="hljs-function">go <span class="hljs-title">func</span><span class="hljs-params">()</span></span>{
+        <span class="hljs-keyword">for</span> i := <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">10</span>; i++{
+            fmt.Printf(<span class="hljs-string">"%d "</span>, &lt;-c)
+        }
+        quit &lt;- <span class="hljs-number">1</span>
+    }()
+    testMuti(c, quit)
+}
+
+<span class="hljs-function">func <span class="hljs-title">testMuti</span><span class="hljs-params">(c, quit chan <span class="hljs-keyword">int</span>)</span></span>{
+    x, y := <span class="hljs-number">0</span>, <span class="hljs-number">1</span>
+    <span class="hljs-keyword">for</span> {
+        select{
+        <span class="hljs-keyword">case</span> c&lt;-x:
+            x, y = y, x+y
+        <span class="hljs-keyword">case</span> &lt;-quit:
+            fmt.Print(<span class="hljs-string">"\nquit"</span>)
+            <span class="hljs-keyword">return</span>
+        }
+    }
+}
+</code></pre>
+<div class="image-package">
+<div class="image-container" style="max-width: 700px; max-height: 85px;">
+<div class="image-container-fill" style="padding-bottom: 11.0%;"></div>
+<div class="image-view" data-width="773" data-height="85"><img data-original-src="//upload-images.jianshu.io/upload_images/4822713-b32120187fe6a3f0.png" data-original-width="773" data-original-height="85" data-original-format="image/png" data-original-filesize="6644" style="cursor: zoom-in;" class="image-loading"></div>
+</div>
+<div class="image-caption">运行结果</div>
+</div>
+<h2>channle超时机制</h2>
+<p>当一个channel被read/write阻塞时，会被一直阻塞下去，直到channel关闭。产生一个异常退出程序。channel内部没有超时的定时器。但我们可以用select来实现channel的超时机制</p>
+<pre class="hljs css"><code class="css"><span class="hljs-selector-tag">package</span> <span class="hljs-selector-tag">main</span>
+
+<span class="hljs-selector-tag">import</span> (
+    "<span class="hljs-selector-tag">time</span>"
+    "<span class="hljs-selector-tag">fmt</span>"
+)
+
+<span class="hljs-selector-tag">func</span> <span class="hljs-selector-tag">main</span>(){
+    <span class="hljs-attribute">c </span>:= <span class="hljs-built_in">make</span>(chan int)
+    select{
+    case &lt;- c:
+        fmt.<span class="hljs-built_in">Println</span>(<span class="hljs-string">"没有数据"</span>)
+    case &lt;-time.<span class="hljs-built_in">After</span>(5* time.Second):
+        fmt.<span class="hljs-built_in">Println</span>(<span class="hljs-string">"超时退出"</span>)
+    }
+}
+</code></pre>
+<div class="image-package">
+<div class="image-container" style="max-width: 700px; max-height: 82px;">
+<div class="image-container-fill" style="padding-bottom: 10.14%;"></div>
+<div class="image-view" data-width="809" data-height="82"><img data-original-src="//upload-images.jianshu.io/upload_images/4822713-50d87a4cdb3ebd59.png" data-original-width="809" data-original-height="82" data-original-format="image/png" data-original-filesize="5468" style="cursor: zoom-in;" class="image-loading"></div>
+</div>
+<div class="image-caption">运行结果</div>
+</div>
+<h1>线程同步</h1>
+<p>假设现在我们有两个线程，一个线程写文件，一个线程读文件。如果在读文件的同时，写文件的线程向文件中写数据，就会出现问题。为了保证能够正确的读
+写文件，在读文件的时候，不能进行写入文件的操作，在写入时，不能进行读的操作。这就需要互斥锁。互斥锁是线程间同步的一种机制，用了保证在同一时刻只用
+一个线程访问共享资源。go中的互斥锁在sync包中。下面是个线程安全的map:</p>
+<pre class="hljs cpp"><code class="cpp"><span class="hljs-function">package main
+
+<span class="hljs-title">import</span> <span class="hljs-params">(
+    <span class="hljs-string">"errors"</span>
+    <span class="hljs-string">"sync"</span>
+    <span class="hljs-string">"fmt"</span>
+)</span>
+
+func <span class="hljs-title">main</span><span class="hljs-params">()</span></span>{
+    m := &amp;MyMap{mp:make(<span class="hljs-built_in">map</span>[<span class="hljs-built_in">string</span>]<span class="hljs-keyword">int</span>), mutex:<span class="hljs-keyword">new</span>(sync.Mutex)}
+    go SetValue(m)
+    go m.Display()
+    var str <span class="hljs-built_in">string</span>
+    fmt.Scan(&amp;str)
+}
+
+type MyMap struct{
+    mp <span class="hljs-built_in">map</span>[<span class="hljs-built_in">string</span>]<span class="hljs-keyword">int</span>
+    mutex *sync.Mutex
+}
+
+func (<span class="hljs-keyword">this</span> *MyMap)Get(key <span class="hljs-built_in">string</span>)(<span class="hljs-keyword">int</span>, error){
+    <span class="hljs-keyword">this</span>.mutex.Lock()
+    i, ok := <span class="hljs-keyword">this</span>.mp[key]
+    <span class="hljs-keyword">this</span>.mutex.Unlock()
+    <span class="hljs-keyword">if</span> !ok{
+        <span class="hljs-keyword">return</span> i, errors.New(<span class="hljs-string">"不存在"</span>)
+    }
+    <span class="hljs-keyword">return</span> i, nil
+}
+
+func (<span class="hljs-keyword">this</span> *MyMap)Set(key <span class="hljs-built_in">string</span>, val <span class="hljs-keyword">int</span>){
+    <span class="hljs-keyword">this</span>.mutex.Lock()
+    defer <span class="hljs-keyword">this</span>.mutex.Unlock()
+    <span class="hljs-keyword">this</span>.mp[key] = val
+}
+
+func (<span class="hljs-keyword">this</span> *MyMap)Display(){
+    <span class="hljs-keyword">this</span>.mutex.Lock()
+    defer <span class="hljs-keyword">this</span>.mutex.Unlock()
+    <span class="hljs-keyword">for</span> key, val := range <span class="hljs-keyword">this</span>.mp{
+        fmt.Println(key, <span class="hljs-string">"="</span>, val)
+    }
+}
+
+func SetValue(m *MyMap){
+    var a  rune
+    a = <span class="hljs-string">'a'</span>
+    <span class="hljs-keyword">for</span> i := <span class="hljs-number">0</span>; i&lt; <span class="hljs-number">10</span>; i++{
+        m.Set(<span class="hljs-built_in">string</span>(a+rune(i)), i)
+    }
+}
+</code></pre>
+<div class="image-package">
+<div class="image-container" style="max-width: 700px; max-height: 284px;">
+<div class="image-container-fill" style="padding-bottom: 31.35%;"></div>
+<div class="image-view" data-width="906" data-height="284"><img data-original-src="//upload-images.jianshu.io/upload_images/4822713-82811aa975db8d56.png" data-original-width="906" data-original-height="284" data-original-format="image/png" data-original-filesize="9028" style="cursor: zoom-in;" class="image-loading"></div>
+</div>
+<div class="image-caption">运行结果</div>
+</div>
+<h1>完</h1>
+<p>转载请注明出处<br>
+<a href="https://link.jianshu.com/?t=http%3A%2F%2Fwww.chairis.cn%2Fblog%2Farticle%2F60" target="_blank" rel="nofollow">Golang 学习笔记（06）—— 多线程</a></p>
+<p><a href="https://link.jianshu.com/?t=http%3A%2F%2Fwww.chairis.cn%2Fblog%2Farticle%2F44" target="_blank" rel="nofollow">目录</a><br>
+<a href="https://link.jianshu.com/?t=http%3A%2F%2Fwww.chairis.cn%2Fblog%2Farticle%2F58" target="_blank" rel="nofollow">上一节：Golang 学习笔记（05）—— 面向对象编程</a><br>
+<a href="https://link.jianshu.com/?t=http%3A%2F%2Fwww.chairis.cn%2Fblog%2Farticle%2F61" target="_blank" rel="nofollow">下一节：Golang 学习笔记（07）—— 错误及异常处理</a></p>
+
+          </div>
+        </div>
+    </div>
+
+    <!-- 如果是付费文章，未购买，则显示购买按钮 -->
+
+    <!-- 连载目录项 -->
+
+    <!-- 如果是付费文章 -->
+      <!-- 如果是付费连载，已购买，且作者允许赞赏，则显示付费信息和赞赏 -->
+        <div id="free-reward-panel" class="support-author"><p>小礼物走一走，来简书关注我</p> <div class="btn btn-pay">赞赏支持</div> <div class="supporter"><ul class="support-list"></ul> <!----></div> <!----> <!----></div>
+
+      <div class="show-foot">
+        <a class="notebook" href="https://www.jianshu.com/nb/15236488">
+          <i class="iconfont ic-search-notebook"></i>
+          <span>golang</span>
+</a>        <div class="copyright" data-toggle="tooltip" data-html="true" data-original-title="转载请联系作者获得授权，并标注“简书作者”。">
+          © 著作权归作者所有
+        </div>
+        <div class="modal-wrap" data-report-note="">
+          <a id="report-modal">举报文章</a>
+        </div>
+      </div>
+
+      <!-- 文章底部作者信息 -->
+        <div class="follow-detail">
+          <div class="info">
+            <a class="avatar" href="https://www.jianshu.com/u/9ae5f8ac96ef">
+              <img src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/62beb254-4838-4837-b2a7-a227e8005020.jpg" alt="96">
+</a>            <a class="btn btn-success follow"><i class="iconfont ic-follow"></i><span>关注</span></a>
+            <a class="title" href="https://www.jianshu.com/u/9ae5f8ac96ef">ChainZhang</a>
+              <i class="iconfont ic-man"></i>
+          <p>写了 85778 字，被 737 人关注，获得了 551 个喜欢</p></div>
+            <div class="signature">进无止境     
+http://www.chairis.cn/</div>
+        </div>
+
+    <div class="meta-bottom">
+      <div data-v-6ddd02c6="" class="like"><div data-v-6ddd02c6="" class="btn like-group"><div data-v-6ddd02c6="" class="btn-like"><a data-v-6ddd02c6="">喜欢</a></div> <div data-v-6ddd02c6="" class="modal-wrap"><a data-v-6ddd02c6="">13</a></div></div> <!----></div>
+      <div class="share-group">
+        <a class="share-circle" data-action="weixin-share" data-toggle="tooltip" data-original-title="分享到微信">
+          <i class="iconfont ic-wechat"></i>
+        </a>
+        <a class="share-circle" data-action="weibo-share" data-toggle="tooltip" href="javascript:void((function(s,d,e,r,l,p,t,z,c){var%20f='http://v.t.sina.com.cn/share/share.php?appkey=1881139527',u=z||d.location,p=['&amp;url=',e(u),'&amp;title=',e(t||d.title),'&amp;source=',e(r),'&amp;sourceUrl=',e(l),'&amp;content=',c||'gb2312','&amp;pic=',e(p||'')].join('');function%20a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=440,height=430,left=',(s.width-440)/2,',top=',(s.height-430)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent))setTimeout(a,0);else%20a();})(screen,document,encodeURIComponent,'','','', '%E6%8E%A8%E8%8D%90 ChainZhang %E7%9A%84%E6%96%87%E7%AB%A0%E3%80%8AGolang %E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94 %E5%A4%9A%E7%BA%BF%E7%A8%8B%E3%80%8B%EF%BC%88 %E5%88%86%E4%BA%AB%E8%87%AA @%E7%AE%80%E4%B9%A6 %EF%BC%89','https://www.jianshu.com/p/c3d65105fa46?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=reader_share&amp;utm_source=weibo','%E9%A1%B5%E9%9D%A2%E7%BC%96%E7%A0%81gb2312|utf-8%E9%BB%98%E8%AE%A4gb2312'));" data-original-title="分享到微博">
+          <i class="iconfont ic-weibo"></i>
+        </a>
+        <a class="share-circle" data-toggle="tooltip" id="longshare" target="_blank" data-original-title="" title="">
+            <div class="qrcode" id="qrcode">
+             <img src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/download-index-side-qrcode-cb13fc9106a478795f8d10f9f632fccf.png" alt="Download index side qrcode">
+             <p>下载app生成长微博图片</p>
+             </div>
+          <i class="iconfont ic-picture"></i>
+        </a>
+        <a class="share-circle more-share" tabindex="0" data-toggle="popover" data-placement="top" data-html="true" data-trigger="focus" href="javascript:void(0);" data-content="
+          &lt;ul class=&quot;share-list&quot;&gt;
+            &lt;li&gt;&lt;a href=&quot;javascript:void(function(){var d=document,e=encodeURIComponent,r='http://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url='+e('https://www.jianshu.com/p/c3d65105fa46?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=reader_share&amp;utm_source=qzone')+'&amp;title='+e('推荐 ChainZhang 的文章《Golang 学习笔记（06）—— 多线程》'),x=function(){if(!window.open(r,'qzone','toolbar=0,resizable=1,scrollbars=yes,status=1,width=600,height=600'))location.href=r};if(/Firefox/.test(navigator.userAgent)){setTimeout(x,0)}else{x()}})();&quot;&gt;&lt;i class=&quot;social-icon-sprite social-icon-zone&quot;&gt;&lt;/i&gt;&lt;span&gt;分享到QQ空间&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;a href=&quot;javascript:void(function(){var d=document,e=encodeURIComponent,r='https://twitter.com/share?url='+e('https://www.jianshu.com/p/c3d65105fa46?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=reader_share&amp;utm_source=twitter')+'&amp;text='+e('推荐 ChainZhang 的文章《Golang 学习笔记（06）—— 多线程》（ 分享自 @jianshucom ）')+'&amp;related='+e('jianshucom'),x=function(){if(!window.open(r,'twitter','toolbar=0,resizable=1,scrollbars=yes,status=1,width=600,height=600'))location.href=r};if(/Firefox/.test(navigator.userAgent)){setTimeout(x,0)}else{x()}})();&quot;&gt;&lt;i class=&quot;social-icon-sprite social-icon-twitter&quot;&gt;&lt;/i&gt;&lt;span&gt;分享到Twitter&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;a href=&quot;javascript:void(function(){var d=document,e=encodeURIComponent,r='https://www.facebook.com/dialog/share?app_id=483126645039390&amp;display=popup&amp;href=https://www.jianshu.com/p/c3d65105fa46?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=reader_share&amp;utm_source=facebook',x=function(){if(!window.open(r,'facebook','toolbar=0,resizable=1,scrollbars=yes,status=1,width=450,height=330'))location.href=r};if(/Firefox/.test(navigator.userAgent)){setTimeout(x,0)}else{x()}})();&quot;&gt;&lt;i class=&quot;social-icon-sprite social-icon-facebook&quot;&gt;&lt;/i&gt;&lt;span&gt;分享到Facebook&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;a href=&quot;javascript:void(function(){var d=document,e=encodeURIComponent,r='https://plus.google.com/share?url='+e('https://www.jianshu.com/p/c3d65105fa46?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=reader_share&amp;utm_source=google_plus'),x=function(){if(!window.open(r,'google_plus','toolbar=0,resizable=1,scrollbars=yes,status=1,width=450,height=330'))location.href=r};if(/Firefox/.test(navigator.userAgent)){setTimeout(x,0)}else{x()}})();&quot;&gt;&lt;i class=&quot;social-icon-sprite social-icon-google&quot;&gt;&lt;/i&gt;&lt;span&gt;分享到Google+&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;a href=&quot;javascript:void(function(){var d=document,e=encodeURIComponent,s1=window.getSelection,s2=d.getSelection,s3=d.selection,s=s1?s1():s2?s2():s3?s3.createRange().text:'',r='http://www.douban.com/recommend/?url='+e('https://www.jianshu.com/p/c3d65105fa46?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=reader_share&amp;utm_source=douban')+'&amp;title='+e('Golang 学习笔记（06）—— 多线程')+'&amp;sel='+e(s)+'&amp;v=1',x=function(){if(!window.open(r,'douban','toolbar=0,resizable=1,scrollbars=yes,status=1,width=450,height=330'))location.href=r+'&amp;r=1'};if(/Firefox/.test(navigator.userAgent)){setTimeout(x,0)}else{x()}})()&quot;&gt;&lt;i class=&quot;social-icon-sprite social-icon-douban&quot;&gt;&lt;/i&gt;&lt;span&gt;分享到豆瓣&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+          &lt;/ul&gt;
+        " data-original-title="" title="">更多分享</a>
+      </div>
+    </div>
+
+      <a id="web-note-ad-1" target="_blank" href="https://www.jianshu.com/apps/redirect?utm_source=note-bottom-click"><img src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/web-note-ad-1-c2e1746859dbf03abe49248893c9bea4.png" alt="Web note ad 1"></a>
+
+    <!--
+    <div id="note-comment-above-ad-container">
+      <span id="youdao-comment-ad" class="ad-badge">广告</span>
+    </div>
+    -->
+    <div id="vue_comment"></div>
+  </div>
+
+  <div class="side-tool"><ul><li data-placement="left" data-toggle="tooltip" data-container="body" data-original-title="回到顶部" style=""><a class="function-button"><i class="iconfont ic-backtop"></i></a></li> <!----> <!----> <!----> <!----> <li data-placement="left" data-toggle="tooltip" data-container="body" data-original-title="分享文章" id="share"><a tabindex="0" role="button" data-toggle="popover" data-placement="left" data-html="true" data-trigger="focus" href="javascript:void(0);" data-content="&lt;ul class='share-list' style=&quot;width:220px&quot;&gt;
+                  &lt;li&gt;&lt;a class=&quot;weixin-share&quot;&gt;&lt;i class=&quot;social-icon-sprite social-icon-weixin&quot;&gt;&lt;/i&gt;&lt;span&gt;分享到微信&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+                  &lt;li&gt;&lt;a href=&quot;javascript:void((function(s,d,e,r,l,p,t,z,c){var%20f='http://v.t.sina.com.cn/share/share.php?appkey=1881139527',u=z||d.location,p=['&amp;url=',e(u),'&amp;title=',e(t||d.title),'&amp;source=',e(r),'&amp;sourceUrl=',e(l),'&amp;content=',c||'gb2312','&amp;pic=',e(p||'')].join('');function%20a(){if(!window.open([f,p].join(''),'mb',['toolbar=0,status=0,resizable=1,width=440,height=430,left=',(s.width-440)/2,',top=',(s.height-430)/2].join('')))u.href=[f,p].join('');};if(/Firefox/.test(navigator.userAgent))setTimeout(a,0);else%20a();})(screen,document,encodeURIComponent,'','','', '推荐 ChainZhang 的文章《Golang 学习笔记（06）—— 多线程》（ 分享自 @简书 ）','https://www.jianshu.com/p/c3d65105fa46?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=reader_share&amp;utm_source=weibo','页面编码gb2312|utf-8默认gb2312'));&quot;&gt;&lt;i class='social-icon-sprite social-icon-weibo'&gt;&lt;/i&gt;&lt;span&gt;分享到微博&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+                  
+                  &lt;li&gt;&lt;a href=&quot;javascript:void(function(){var d=document,e=encodeURIComponent,r='http://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?url='+e('https://www.jianshu.com/p/c3d65105fa46?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=reader_share&amp;utm_source=qzone')+'&amp;title='+e('推荐 ChainZhang 的文章《Golang 学习笔记（06）—— 多线程》'),x=function(){if(!window.open(r,'qzone','toolbar=0,resizable=1,scrollbars=yes,status=1,width=600,height=600'))location.href=r};if(/Firefox/.test(navigator.userAgent)){setTimeout(x,0)}else{x()}})();&quot;&gt;&lt;i class='social-icon-sprite social-icon-zone'&gt;&lt;/i&gt;&lt;span&gt;分享到QQ空间&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+                  &lt;li&gt;&lt;a href=&quot;javascript:void(function(){var d=document,e=encodeURIComponent,r='https://twitter.com/share?url='+e('https://www.jianshu.com/p/c3d65105fa46?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=reader_share&amp;utm_source=twitter')+'&amp;text='+e('推荐 ChainZhang 的文章《Golang 学习笔记（06）—— 多线程》（ 分享自 @jianshucom ）')+'&amp;related='+e('jianshucom'),x=function(){if(!window.open(r,'twitter','toolbar=0,resizable=1,scrollbars=yes,status=1,width=600,height=600'))location.href=r};if(/Firefox/.test(navigator.userAgent)){setTimeout(x,0)}else{x()}})();&quot;&gt;&lt;i class='social-icon-sprite social-icon-twitter'&gt;&lt;/i&gt;&lt;span&gt;分享到Twitter&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+                  &lt;li&gt;&lt;a href=&quot;javascript:void(function(){var d=document,e=encodeURIComponent,r='https://www.facebook.com/dialog/share?app_id=483126645039390&amp;display=popup&amp;href=https://www.jianshu.com/p/c3d65105fa46?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=reader_share&amp;utm_source=facebook',x=function(){if(!window.open(r,'facebook','toolbar=0,resizable=1,scrollbars=yes,status=1,width=450,height=330'))location.href=r};if(/Firefox/.test(navigator.userAgent)){setTimeout(x,0)}else{x()}})();&quot;&gt;&lt;i class='social-icon-sprite social-icon-facebook'&gt;&lt;/i&gt;&lt;span&gt;分享到Facebook&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+                  &lt;li&gt;&lt;a href=&quot;javascript:void(function(){var d=document,e=encodeURIComponent,r='https://plus.google.com/share?url='+e('https://www.jianshu.com/p/c3d65105fa46?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=reader_share&amp;utm_source=google_plus'),x=function(){if(!window.open(r,'google_plus','toolbar=0,resizable=1,scrollbars=yes,status=1,width=450,height=330'))location.href=r};if(/Firefox/.test(navigator.userAgent)){setTimeout(x,0)}else{x()}})();&quot;&gt;&lt;i class='social-icon-sprite social-icon-google'&gt;&lt;/i&gt;&lt;span&gt;分享到Google+&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+                  &lt;li&gt;&lt;a href=&quot;javascript:void(function(){var d=document,e=encodeURIComponent,s1=window.getSelection,s2=d.getSelection,s3=d.selection,s=s1?s1():s2?s2():s3?s3.createRange().text:'',r='http://www.douban.com/recommend/?url='+e('https://www.jianshu.com/p/c3d65105fa46?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=reader_share&amp;utm_source=douban')+'&amp;title='+e('Golang 学习笔记（06）—— 多线程')+'&amp;sel='+e(s)+'&amp;v=1',x=function(){if(!window.open(r,'douban','toolbar=0,resizable=1,scrollbars=yes,status=1,width=450,height=330'))location.href=r+'&amp;r=1'};if(/Firefox/.test(navigator.userAgent)){setTimeout(x,0)}else{x()}})()&quot;&gt;&lt;i class='social-icon-sprite social-icon-douban'&gt;&lt;/i&gt;&lt;span&gt;分享到豆瓣&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+                &lt;/ul&gt;" data-original-title="" title="" class="function-button"><i class="iconfont ic-share"></i></a> <!----></li> <!----></ul></div>
+</div>
+<div class="note-bottom">
+  <div><div class="main"><div class="title">被以下专题收入，发现更多相似内容</div> <!----> <div class="include-collection"><!----> <a href="https://www.jianshu.com/c/2ba5a726a9f1?utm_source=desktop&amp;utm_medium=notes-included-collection" target="_blank" class="item"><img src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/golang.jpg"><div class="name">Golang</div></a><a href="https://www.jianshu.com/c/NEt52a?utm_source=desktop&amp;utm_medium=notes-included-collection" target="_blank" class="item"><img src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/computer_guy.jpg"><div class="name">程序员</div></a><a href="https://www.jianshu.com/c/d93e187f3890?utm_source=desktop&amp;utm_medium=notes-included-collection" target="_blank" class="item"><img src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/QQ20180101135348.png"><div class="name">go语言学习</div></a><a href="https://www.jianshu.com/c/3024510a9f00?utm_source=desktop&amp;utm_medium=notes-included-collection" target="_blank" class="item"><img src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/be72655459cb90c92c41eab34d0e8b3f.jpeg"><div class="name">Go知识库</div></a> <!----></div></div> <!----> <!----></div>
+  <div data-vcomp="recommended-notes" data-note-id="21662890"></div>
+  <!-- 相关文章 -->
+    <!-- 未登录用户 -->
+    <div class="seo-recommended-notes">
+
+          <div class="note ">
+                        <a class="title" target="_blank" href="https://www.jianshu.com/p/be2d3e35c5d7?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=seo_notes&amp;utm_source=recommendation">计算机操作系统（汤小丹）第四版</a>
+            <p class="description">第一章1．设计现代OS的主要目标是什么？答：（1）有效性 （2）方便性 
+（3）可扩充性 
+（4）开放性2．OS的作用可表现在哪几个方面？答：（1）OS作为用户与计算机硬件系统之间的接口（2）OS作为计算机系统资源的管理者（3）OS实现
+了对计算机资源的抽象3．为什么说OS实现了...</p>
+            <a class="author" target="_blank" href="https://www.jianshu.com/u/9b24e7db193a?utm_campaign=maleskine&amp;utm_content=user&amp;utm_medium=seo_notes&amp;utm_source=recommendation">
+              <div class="avatar">
+                <img src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/fd810117-2905-40b9-940c-4e3d01c779fc.jpg" alt="48">
+              </div>
+              <span class="name">吴业鹏</span>
+</a>          </div>
+
+          <div class="note ">
+                        <a class="title" target="_blank" href="https://www.jianshu.com/p/be04990895c7?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=seo_notes&amp;utm_source=recommendation">Go语言中goroutine的分析</a>
+            <p class="description">Goroutine是Go里的一种轻量级线程——协程。相对线程，协程的优势就
+在于它非常轻量级，进行上下文切换的代价非常的小。对于一个goroutine 
+,每个结构体G中有一个sched的属性就是用来保存它上下文的。这样，goroutine 就可以很轻易的来回切换。由于其上下文...</p>
+            <a class="author" target="_blank" href="https://www.jianshu.com/u/229cd2a70bc7?utm_campaign=maleskine&amp;utm_content=user&amp;utm_medium=seo_notes&amp;utm_source=recommendation">
+              <div class="avatar">
+                <img src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/40cfb2c9ac7b.jpeg" alt="48">
+              </div>
+              <span class="name">witchiman</span>
+</a>          </div>
+
+          <div class="note ">
+                        <a class="title" target="_blank" href="https://www.jianshu.com/p/a315224886d2?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=seo_notes&amp;utm_source=recommendation">GoLang TCP网络编程</a>
+            <p class="description">原文链接：http://blog.csdn.net
+/hacker00011000/article/details/53910367 一、序言#### Golang的主要 
+设计目标之一就是面向大规模后端服务程序，网络通信这块是服务端 程序必不可少也是至关重要的一部分。在日常应...</p>
+            <a class="author" target="_blank" href="https://www.jianshu.com/u/79442c851cef?utm_campaign=maleskine&amp;utm_content=user&amp;utm_medium=seo_notes&amp;utm_source=recommendation">
+              <div class="avatar">
+                <img src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/2efc281c-5825-4df1-8d5d-78d940d1264a.png" alt="48">
+              </div>
+              <span class="name">雲凌禹</span>
+</a>          </div>
+
+          <div class="note have-img">
+            <a class="cover" target="_blank" href="https://www.jianshu.com/p/1acdfac2b4e4?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=seo_notes&amp;utm_source=recommendation">
+              <img src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/1063431-025e7bcbbbc50755.png" alt="240">
+</a>            <a class="title" target="_blank" href="https://www.jianshu.com/p/1acdfac2b4e4?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=seo_notes&amp;utm_source=recommendation">Java后台面试 常见问题</a>
+            <p class="description">从三月份找实习到现在，面了一些公司，挂了不少，但最终还是拿到小米、百度、阿
+里、京东、新浪、CVTE、乐视家的研发岗offer。我找的是java后台开发，把常见的问题分享给大家，有一些是自己的总结，有一些是网上借鉴的内
+容。希望能帮助到各位。预祝各位同学拿到自己心仪的offer...</p>
+            <a class="author" target="_blank" href="https://www.jianshu.com/u/bd4811478d4b?utm_campaign=maleskine&amp;utm_content=user&amp;utm_medium=seo_notes&amp;utm_source=recommendation">
+              <div class="avatar">
+                <img src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/5ab45111-774b-4cb2-a1e3-4b0702bf02a3.png" alt="48">
+              </div>
+              <span class="name">时芥蓝</span>
+</a>          </div>
+
+          <div class="note ">
+                        <a class="title" target="_blank" href="https://www.jianshu.com/p/788072e89e5a?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=seo_notes&amp;utm_source=recommendation">goroutine与调度器[转]</a>
+            <p class="description">http://skoo.me/go/2013/11/29/golang-schedule?hmsr=studygolang.com&amp;utm_medium=studygolang.com&amp;utm_source=studygolang.com
+ 我们都知道Go语言是原生支持语言级...</p>
+            <a class="author" target="_blank" href="https://www.jianshu.com/u/d1bb73ea4e78?utm_campaign=maleskine&amp;utm_content=user&amp;utm_medium=seo_notes&amp;utm_source=recommendation">
+              <div class="avatar">
+                <img src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/a1db4263-4ab8-4261-805e-7706277a24a5.jpg" alt="48">
+              </div>
+              <span class="name">baboon</span>
+</a>          </div>
+
+          <div class="note have-img">
+            <a class="cover" target="_blank" href="https://www.jianshu.com/p/a60bf7f299ee?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=seo_notes&amp;utm_source=recommendation">
+              <img src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/928042-a1700f512a46c2b0.png" alt="240">
+</a>            <a class="title" target="_blank" href="https://www.jianshu.com/p/a60bf7f299ee?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=seo_notes&amp;utm_source=recommendation">自媒体平台版权保护现状</a>
+            <p class="description">文/夏峰这一年来各种自媒体齐开争鸣，一篇欣欣向荣的景象，似曾相识，国人是永
+不缺乏创造力的，但对热点是有足够行动力的，每逢有成功样板出现，都会在短时间内出现大量的孪生兄弟姐妹，不少盈利模式相同、内容相似、甚至照搬照抄的也
+屡见不鲜。 今天我想就微信公众号这个用户量、文章更新量最...</p>
+            <a class="author" target="_blank" href="https://www.jianshu.com/u/8df63356d01a?utm_campaign=maleskine&amp;utm_content=user&amp;utm_medium=seo_notes&amp;utm_source=recommendation">
+              <div class="avatar">
+                <img src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/d753d36d-164f-48a1-b32b-166d03443f23.jpg" alt="48">
+              </div>
+              <span class="name">洛小白</span>
+</a>          </div>
+
+          <div class="note ">
+                        <a class="title" target="_blank" href="https://www.jianshu.com/p/00cd66feaf95?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=seo_notes&amp;utm_source=recommendation">雪莉小分队—第二十次作业—信息的断舍离-20170326</a>
+            <p class="description">I:在这信息爆炸的时代，相信很多人都不是觉得没有信息，而是信息太多，而多余
+无用的信息占用我们的时间太多，就会让我们错过真正有用的信息。所以我们需要对信息源进行“断离舍”。 范围:觉得信息源太多无从选择的人。 步骤: 
+1.统计自己每天关注的领域有哪些。 2.每个领域最多挑出三...</p>
+            <a class="author" target="_blank" href="https://www.jianshu.com/u/3a9015f89326?utm_campaign=maleskine&amp;utm_content=user&amp;utm_medium=seo_notes&amp;utm_source=recommendation">
+              <div class="avatar">
+                <img src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/2e415377-9822-47c4-90e0-1691f9dcd064.png" alt="48">
+              </div>
+              <span class="name">去一万尺深的海</span>
+</a>          </div>
+
+          <div class="note have-img">
+            <a class="cover" target="_blank" href="https://www.jianshu.com/p/3c9fedd6bb29?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=seo_notes&amp;utm_source=recommendation">
+              <img src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/2444799-ebebd3600d809025.jpg" alt="240">
+</a>            <a class="title" target="_blank" href="https://www.jianshu.com/p/3c9fedd6bb29?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=seo_notes&amp;utm_source=recommendation">春娇救志明：余春娇真的配不上张志明，但我还是希望他们在一起</a>
+            <p class="description">《春娇救志明》主题曲 - 五月天 跟你开始于那漫春天 
+那春天是我这一生最温暖干冰于水中会冒烟 等于我遇上春娇得到改变填词我不会的 等一下唱副歌尽管音调错 好真心的我余春娇搭救张志明搭救了他整个生命 
+赐他生命扮王馨 ~ 平余春娇大过张志明但是她矮过张志明志明低能但是他始终帅气...</p>
+            <a class="author" target="_blank" href="https://www.jianshu.com/u/6381f10529bf?utm_campaign=maleskine&amp;utm_content=user&amp;utm_medium=seo_notes&amp;utm_source=recommendation">
+              <div class="avatar">
+                <img src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/f1effe160329.jpg" alt="48">
+              </div>
+              <span class="name">沈先森</span>
+</a>          </div>
+
+          <div class="note have-img">
+            <a class="cover" target="_blank" href="https://www.jianshu.com/p/798bee53315d?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=seo_notes&amp;utm_source=recommendation">
+              <img src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/1663136-453d9a4459e3c2d5.jpg" alt="240">
+</a>            <a class="title" target="_blank" href="https://www.jianshu.com/p/798bee53315d?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=seo_notes&amp;utm_source=recommendation">老干部靳东又出神语录！没文化，你都不好意思说是他粉丝</a>
+            <p class="description">自从神剧《伪装者》火了之后，我大哥靳东也开始被粉丝们狂热的追捧。 
+无论是大哥的电影、电视剧，还是他的微博以及相关的新闻，只要是大哥的动态，小狮妹都要要了解一遍。 
+不过靳东经常被人称作是老干部，什么叫老干部，小狮妹先来科普一番！ 老干部： 一个是三观正到爆炸，老是一副教育的口...</p>
+            <a class="author" target="_blank" href="https://www.jianshu.com/u/1b035066a128?utm_campaign=maleskine&amp;utm_content=user&amp;utm_medium=seo_notes&amp;utm_source=recommendation">
+              <div class="avatar">
+                <img src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/99150b10b4c4.jpg" alt="48">
+              </div>
+              <span class="name">进击的小狮妹</span>
+</a>          </div>
+
+          <div class="note have-img">
+            <a class="cover" target="_blank" href="https://www.jianshu.com/p/ec2b38bf8d74?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=seo_notes&amp;utm_source=recommendation">
+              <img src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/6954682-5bb425c63784a4ed.jpg" alt="240">
+</a>            <a class="title" target="_blank" href="https://www.jianshu.com/p/ec2b38bf8d74?utm_campaign=maleskine&amp;utm_content=note&amp;utm_medium=seo_notes&amp;utm_source=recommendation">电子身份证即将启用，以后不用担心信息被盗了</a>
+            <p class="description">    
+我们处于信息时代，谁能掌握信息谁将能拥有更多资源，因此，才会有如此之多的信息盗用。利用个人身份证信息泄露的电子诈骗，严重困扰了人们的日常生活，到
+底有什么办法可以杜绝信息盗用呢？公安部给出了答案。      对于个人身份证信息盗用，公安部放出的“大招”是使用电子身份证...</p>
+            <a class="author" target="_blank" href="https://www.jianshu.com/u/3f76d6030af8?utm_campaign=maleskine&amp;utm_content=user&amp;utm_medium=seo_notes&amp;utm_source=recommendation">
+              <div class="avatar">
+                <img src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/921f3cc6-1d56-475e-a807-b067d10767fb.jpg" alt="48">
+              </div>
+              <span class="name">个金样样红</span>
+</a>          </div>
+    </div>
+</div>
+
+    <script type="application/json" data-name="page-data">{"user_signed_in":false,"locale":"zh-CN","os":"mac","read_mode":"day","read_font":"font2","note_show":{"is_author":false,"is_following_author":false,"is_liked_note":false,"follow_state":0,"uuid":"bfa35c06-22ce-44ab-ade1-12d79d738413"},"note":{"id":21662890,"slug":"c3d65105fa46","user_id":4822713,"notebook_id":15236488,"commentable":true,"likes_count":13,"views_count":6320,"public_wordage":1165,"comments_count":3,"featured_comments_count":0,"total_rewards_count":0,"is_author":false,"paid_type":"free","paid":false,"paid_content_accessible":false,"author":{"nickname":"ChainZhang","total_wordage":85778,"followers_count":737,"total_likes_count":551}}}</script>
+    
+    <script src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/babel-polyfill-6cd2d6b53fe3184b71cc.js" crossorigin="anonymous"></script>
+    <script src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/web-base-7213693cd74d07a334e7.js" crossorigin="anonymous"></script>
+<script src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/web-05497680d94d50b1c7af.js" crossorigin="anonymous"></script>
+    
+    <script src="Golang%20%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0%EF%BC%8806%EF%BC%89%E2%80%94%E2%80%94%20%E5%A4%9A%E7%BA%BF%E7%A8%8B%20-%20%E7%AE%80%E4%B9%A6_files/entry-82e44627b2e2d73431d6.js" crossorigin="anonymous"></script>
+    <script>
+  (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      if (curProtocol === 'https') {
+          bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';
+      }
+      else {
+          bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+      }
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+  })();
+</script>
+
+  
+
+<!----><!----></body></html>
