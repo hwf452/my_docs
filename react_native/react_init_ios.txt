@@ -1,0 +1,19 @@
+场景说明
+
+1.有时候初始化react native混合应用开发时，只初始化了android端或初始化后，ios端缺失，这时运行 react-native run-ios 项目是跑不起来的，这时就需要初始化了.
+
+初始化步骤 
+
+1.webstorm打开项目进入项目根目录
+
+2.进入node_modules/react-native文件夹
+cd node_modules/react-native
+
+3.执行第三方安装包命令
+./scripts/ios-install-third-party.sh
+
+4.进入glog文件夹
+cd third-party/glog-0.3.4/
+
+5.执行行配置脚本
+../../scripts/ios-configure-glog.sh
