@@ -17,3 +17,15 @@ cd third-party/glog-0.3.4/
 
 5.执行行配置脚本
 ../../scripts/ios-configure-glog.sh
+
+
+
+
+或者
+1.直接把iosinit.sh文件复制到react native项目根目录
+
+2.加运行权限
+chmod 777 iosinit.sh
+
+3.运行脚本
+./iosinit.sh
