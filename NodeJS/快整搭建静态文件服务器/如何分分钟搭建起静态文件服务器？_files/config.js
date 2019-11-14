@@ -1,0 +1,1 @@
+define("sjs/matrix/ad/form/config",function(){return{iacHref:"http://corp.sohu.com/s2007/privacy/"}});

@@ -1,0 +1,35 @@
+/usr/local/node/node-v10.16.2-linux-x64/bin/serve
+
+静态资源服务器安装
+
+npm install –g serve 
+
+启动
+
+/usr/local/node/node-v10.16.2-linux-x64/bin/serve -p 8000 ftp/
+
+
+创建开机启动 
+vim serve.sh
+加入
+#!/bin/bash
+
+cd /root/
+nohup /usr/local/node/node-v10.16.2-linux-x64/bin/serve -p 8000 ftp/ &
+
+保存退出 
+
+在bootstart.sh 加入
+sh /root/serve.sh
+
+
+原文链接
+
+http://www.sohu.com/a/228665432_185201
+
+
+
+
+http://www.cloudservicesystem.com/.well-known/pki-validation/
+
+http://cloudservicesystem.com/.well-known/pki-validation/fileauth.txt
