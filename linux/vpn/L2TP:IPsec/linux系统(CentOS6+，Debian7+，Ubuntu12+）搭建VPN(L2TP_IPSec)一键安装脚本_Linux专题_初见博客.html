@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="Content-Language" content="zh-CN">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimum-scale=1.0, maximum-scale=1.0">
+<meta name="generator" content="Z-BlogPHP 1.5.2 Zero">
+<title>linux系统(CentOS6+，Debian7+，Ubuntu12+）搭建VPN(L2TP/IPSec)一键安装脚本_Linux专题_初见博客</title>
+<meta name="keywords" content="初见博客">
+<meta name="description" content="本脚本适用环境：系统支持：CentOS6+，Debian7+，Ubuntu12+内存要求：≥128M更新日期：2017 年 05 月 28 日关于本脚本：名词解释如下L2TP（Layer 2 Tunneling Protocol）IPSec（Internet Proto...">
+<meta name="author" content="初见博客">
+<link rel="stylesheet" rev="stylesheet" href="linux%E7%B3%BB%E7%BB%9F(CentOS6+%EF%BC%8CDebian7+%EF%BC%8CUbuntu12+%EF%BC%89%E6%90%AD%E5%BB%BAVPN(L2TP_IPSec)%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85%E8%84%9A%E6%9C%AC_Linux%E4%B8%93%E9%A2%98_%E5%88%9D%E8%A7%81%E5%8D%9A%E5%AE%A2_files/style.css" type="text/css" media="all">
+<script src="linux%E7%B3%BB%E7%BB%9F(CentOS6+%EF%BC%8CDebian7+%EF%BC%8CUbuntu12+%EF%BC%89%E6%90%AD%E5%BB%BAVPN(L2TP_IPSec)%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85%E8%84%9A%E6%9C%AC_Linux%E4%B8%93%E9%A2%98_%E5%88%9D%E8%A7%81%E5%8D%9A%E5%AE%A2_files/common.js" type="text/javascript"></script><script src="linux%E7%B3%BB%E7%BB%9F(CentOS6+%EF%BC%8CDebian7+%EF%BC%8CUbuntu12+%EF%BC%89%E6%90%AD%E5%BB%BAVPN(L2TP_IPSec)%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85%E8%84%9A%E6%9C%AC_Linux%E4%B8%93%E9%A2%98_%E5%88%9D%E8%A7%81%E5%8D%9A%E5%AE%A2_files/jquery-1.js"></script><script src="linux%E7%B3%BB%E7%BB%9F(CentOS6+%EF%BC%8CDebian7+%EF%BC%8CUbuntu12+%EF%BC%89%E6%90%AD%E5%BB%BAVPN(L2TP_IPSec)%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85%E8%84%9A%E6%9C%AC_Linux%E4%B8%93%E9%A2%98_%E5%88%9D%E8%A7%81%E5%8D%9A%E5%AE%A2_files/zblogphp.js"></script>
+<script src="linux%E7%B3%BB%E7%BB%9F(CentOS6+%EF%BC%8CDebian7+%EF%BC%8CUbuntu12+%EF%BC%89%E6%90%AD%E5%BB%BAVPN(L2TP_IPSec)%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85%E8%84%9A%E6%9C%AC_Linux%E4%B8%93%E9%A2%98_%E5%88%9D%E8%A7%81%E5%8D%9A%E5%AE%A2_files/c_html_js_add.js" type="text/javascript"></script><script src="linux%E7%B3%BB%E7%BB%9F(CentOS6+%EF%BC%8CDebian7+%EF%BC%8CUbuntu12+%EF%BC%89%E6%90%AD%E5%BB%BAVPN(L2TP_IPSec)%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85%E8%84%9A%E6%9C%AC_Linux%E4%B8%93%E9%A2%98_%E5%88%9D%E8%A7%81%E5%8D%9A%E5%AE%A2_files/prism.js" type="text/javascript"></script><link rel="stylesheet" type="text/css" href="linux%E7%B3%BB%E7%BB%9F(CentOS6+%EF%BC%8CDebian7+%EF%BC%8CUbuntu12+%EF%BC%89%E6%90%AD%E5%BB%BAVPN(L2TP_IPSec)%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85%E8%84%9A%E6%9C%AC_Linux%E4%B8%93%E9%A2%98_%E5%88%9D%E8%A7%81%E5%8D%9A%E5%AE%A2_files/prism.css">
+
+<link rel="stylesheet" href="linux%E7%B3%BB%E7%BB%9F(CentOS6+%EF%BC%8CDebian7+%EF%BC%8CUbuntu12+%EF%BC%89%E6%90%AD%E5%BB%BAVPN(L2TP_IPSec)%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85%E8%84%9A%E6%9C%AC_Linux%E4%B8%93%E9%A2%98_%E5%88%9D%E8%A7%81%E5%8D%9A%E5%AE%A2_files/font-awesome.css" media="screen" type="text/css">
+<style type="text/css">
+body {background: #F3F3F3;}
+.logo a{background-color:#FF5E52;}
+.red {border-bottom-color: #FF5E52;}
+.mean-container .mean-bar {background: #FF5E52;}
+#header {border-bottom: solid 5px #FF5E52;}
+#header .nav-menu .sub-menu {border-top: 3px solid #FF5E52;}
+.footer {border-top: 5px solid #FF5E52;}
+#header .nav-menu .current-menu-item {color: #FF5E52;}
+#menu .pagesider-menu .current-menu-item {color:#FF5E52; }
+#header .nav-menu li a:hover {color:#FF5E52; }
+.excerpt:hover {border-left-color: #FF5E52;}
+.label-important, .badge-important {background-color: #FF5E52;}
+.label-important .label-arrow, .badge-important .label-arrow {border-left-color: #FF5E52;}
+a {color: #333333;}
+.article-title a {color: #333333;}
+.action-like {background-color: #FF5E52;}
+.Whisper-like {background-color: #FF5E52;}
+.function .function_t {border-bottom: 2px solid #FF5E52;  border-left: 3px solid #FF5E52;}
+.tetle strong,.titlec strong {border-bottom: 2px solid #FF5E52;}
+#divCalendar td a {background: #FF5E52;}
+#divArchives a, #divAuthors a, #divCatalog a, #divLinkage a, #divPrevious a, #divTags a, #divFavorites a, #divNavBar a {border-left: 1px solid #FF5E52;}
+#divCommentPost p {color: #FF5E52;}
+li.msgarticle {border-bottom: 1px solid #FF5E52;}
+ul.msg ul.msg {border-top: 1px dashed #FF5E52;}
+.navigation nav>span {background: #FF5E52;}
+.pagination ul > li.next-page > a {background-color: #FF5E52;}
+.post-copyright:hover {background-color: #FF5E52;}
+#divSearchPanel input[type="submit"] {border: 3px solid #FF5E52;background: #FF5E52;}
+input.button {background: #FF5E52;border: 1px solid #FF5E52;}
+</style>
+<script src="linux%E7%B3%BB%E7%BB%9F(CentOS6+%EF%BC%8CDebian7+%EF%BC%8CUbuntu12+%EF%BC%89%E6%90%AD%E5%BB%BAVPN(L2TP_IPSec)%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85%E8%84%9A%E6%9C%AC_Linux%E4%B8%93%E9%A2%98_%E5%88%9D%E8%A7%81%E5%8D%9A%E5%AE%A2_files/com.js" type="text/javascript"></script>
+<script src="linux%E7%B3%BB%E7%BB%9F(CentOS6+%EF%BC%8CDebian7+%EF%BC%8CUbuntu12+%EF%BC%89%E6%90%AD%E5%BB%BAVPN(L2TP_IPSec)%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85%E8%84%9A%E6%9C%AC_Linux%E4%B8%93%E9%A2%98_%E5%88%9D%E8%A7%81%E5%8D%9A%E5%AE%A2_files/share.js"></script><style type="text/css">.dplayer {
+  position: relative;
+  overflow: hidden;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+  line-height: 1; }
+  .dplayer:-webkit-full-screen {
+    width: 100% !important;
+    height: 100% !important;
+    background: #000; }
+    .dplayer:-webkit-full-screen .dplayer-danmaku .dplayer-danmaku-top.dplayer-danmaku-move,
+    .dplayer:-webkit-full-screen .dplayer-danmaku .dplayer-danmaku-bottom.dplayer-danmaku-move {
+      -webkit-animation: danmaku-center 6s linear;
+              animation: danmaku-center 6s linear;
+      -webkit-animation-play-state: paused;
+              animation-play-state: paused; }
+    .dplayer:-webkit-full-screen .dplayer-danmaku .dplayer-danmaku-right.dplayer-danmaku-move {
+      -webkit-animation: danmaku 8s linear;
+              animation: danmaku 8s linear;
+      -webkit-animation-play-state: paused;
+              animation-play-state: paused; }
+  .dplayer.dplayer-no-danmaku .dplayer-controller .dplayer-icons .dplayer-setting .dplayer-setting-box {
+    height: 60px; }
+  .dplayer.dplayer-no-danmaku .dplayer-controller .dplayer-icons .dplayer-comment {
+    display: none; }
+  .dplayer.dplayer-no-danmaku .dplayer-danmaku {
+    display: none; }
+  .dplayer.dplayer-playing .dplayer-danmaku .dplayer-danmaku-move {
+    -webkit-animation-play-state: running !important;
+            animation-play-state: running !important; }
+  @media (min-width: 900px) {
+    .dplayer.dplayer-playing .dplayer-controller-mask {
+      opacity: 0; }
+    .dplayer.dplayer-playing .dplayer-controller {
+      opacity: 0; }
+    .dplayer.dplayer-playing:hover .dplayer-controller-mask {
+      opacity: 1; }
+    .dplayer.dplayer-playing:hover .dplayer-controller {
+      opacity: 1; } }
+  .dplayer.dplayer-loading .dplayer-bezel .diplayer-loading-icon {
+    display: block; }
+  .dplayer.dplayer-loading .dplayer-danmaku .dplayer-danmaku-move {
+    -webkit-animation-play-state: paused !important;
+            animation-play-state: paused !important; }
+  .dplayer.dplayer-hide-controller .dplayer-controller-mask {
+    opacity: 0;
+    -webkit-transform: translateY(100%);
+            transform: translateY(100%); }
+  .dplayer.dplayer-hide-controller .dplayer-controller {
+    opacity: 0;
+    -webkit-transform: translateY(100%);
+            transform: translateY(100%); }
+  .dplayer.dplayer-show-controller .dplayer-controller-mask {
+    opacity: 1; }
+  .dplayer.dplayer-show-controller .dplayer-controller {
+    opacity: 1; }
+  .dplayer .dplayer-mask {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1;
+    display: none; }
+    .dplayer .dplayer-mask.dplayer-mask-show {
+      display: block; }
+  .dplayer .dplayer-video-wrap {
+    position: relative;
+    background: #000;
+    font-size: 0;
+    width: 100%;
+    height: 100%; }
+    .dplayer .dplayer-video-wrap .dplayer-video {
+      width: 100%;
+      height: 100%; }
+  .dplayer .dplayer-danmaku {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    font-size: 22px;
+    color: #fff; }
+    .dplayer .dplayer-danmaku .dplayer-danmaku-item {
+      display: inline-block;
+      pointer-events: none;
+      -webkit-user-select: none;
+         -moz-user-select: none;
+          -ms-user-select: none;
+              user-select: none;
+      cursor: default;
+      white-space: nowrap;
+      font-weight: bolder;
+      text-shadow: 0.5px 0.5px 0.5px rgba(0, 0, 0, 0.5); }
+      .dplayer .dplayer-danmaku .dplayer-danmaku-item--demo {
+        position: absolute;
+        visibility: hidden; }
+    .dplayer .dplayer-danmaku .dplayer-danmaku-right {
+      position: absolute;
+      right: 0;
+      -webkit-transform: translateX(100%);
+              transform: translateX(100%); }
+      .dplayer .dplayer-danmaku .dplayer-danmaku-right.dplayer-danmaku-move {
+        will-change: transform;
+        -webkit-animation: danmaku 5s linear;
+                animation: danmaku 5s linear;
+        -webkit-animation-play-state: paused;
+                animation-play-state: paused; }
+
+@-webkit-keyframes danmaku {
+  from {
+    -webkit-transform: translateX(100%);
+            transform: translateX(100%); } }
+
+@keyframes danmaku {
+  from {
+    -webkit-transform: translateX(100%);
+            transform: translateX(100%); } }
+    .dplayer .dplayer-danmaku .dplayer-danmaku-top,
+    .dplayer .dplayer-danmaku .dplayer-danmaku-bottom {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      visibility: hidden; }
+      .dplayer .dplayer-danmaku .dplayer-danmaku-top.dplayer-danmaku-move,
+      .dplayer .dplayer-danmaku .dplayer-danmaku-bottom.dplayer-danmaku-move {
+        will-change: visibility;
+        -webkit-animation: danmaku-center 4s linear;
+                animation: danmaku-center 4s linear;
+        -webkit-animation-play-state: paused;
+                animation-play-state: paused; }
+
+@-webkit-keyframes danmaku-center {
+  from {
+    visibility: visible; }
+  to {
+    visibility: visible; } }
+
+@keyframes danmaku-center {
+  from {
+    visibility: visible; }
+  to {
+    visibility: visible; } }
+  .dplayer .dplayer-bezel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    font-size: 22px;
+    color: #fff;
+    pointer-events: none; }
+    .dplayer .dplayer-bezel .dplayer-fill {
+      fill: rgba(255, 255, 255, 0.8); }
+    .dplayer .dplayer-bezel .dplayer-bezel-icon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin: -26px 0 0 -26px;
+      height: 52px;
+      width: 52px;
+      padding: 12px;
+      box-sizing: border-box;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 50%;
+      opacity: 0;
+      pointer-events: none; }
+      .dplayer .dplayer-bezel .dplayer-bezel-icon.dplayer-bezel-transition {
+        -webkit-animation: bezel-hide .5s linear;
+                animation: bezel-hide .5s linear; }
+
+@-webkit-keyframes bezel-hide {
+  from {
+    opacity: 1;
+    -webkit-transform: scale(1);
+            transform: scale(1); }
+  to {
+    opacity: 0;
+    -webkit-transform: scale(2);
+            transform: scale(2); } }
+
+@keyframes bezel-hide {
+  from {
+    opacity: 1;
+    -webkit-transform: scale(1);
+            transform: scale(1); }
+  to {
+    opacity: 0;
+    -webkit-transform: scale(2);
+            transform: scale(2); } }
+    .dplayer .dplayer-bezel .dplayer-danloading {
+      position: absolute;
+      top: 50%;
+      margin-top: -7px;
+      width: 100%;
+      text-align: center;
+      font-size: 14px;
+      line-height: 14px;
+      -webkit-animation: my-face 5s infinite ease-in-out;
+              animation: my-face 5s infinite ease-in-out; }
+    .dplayer .dplayer-bezel .diplayer-loading-icon {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin: -18px 0 0 -18px;
+      height: 36px;
+      width: 36px;
+      pointer-events: none; }
+      .dplayer .dplayer-bezel .diplayer-loading-icon .diplayer-loading-hide {
+        display: none; }
+      .dplayer .dplayer-bezel .diplayer-loading-icon .diplayer-loading-dot {
+        -webkit-animation: diplayer-loading-dot-fade .8s ease infinite;
+                animation: diplayer-loading-dot-fade .8s ease infinite;
+        opacity: 0;
+        fill: #fff;
+        -webkit-transform-origin: 4px 4px;
+                transform-origin: 4px 4px; }
+        .dplayer .dplayer-bezel .diplayer-loading-icon .diplayer-loading-dot.diplayer-loading-dot-7 {
+          -webkit-animation-delay: 0.7s;
+                  animation-delay: 0.7s; }
+        .dplayer .dplayer-bezel .diplayer-loading-icon .diplayer-loading-dot.diplayer-loading-dot-6 {
+          -webkit-animation-delay: 0.6s;
+                  animation-delay: 0.6s; }
+        .dplayer .dplayer-bezel .diplayer-loading-icon .diplayer-loading-dot.diplayer-loading-dot-5 {
+          -webkit-animation-delay: 0.5s;
+                  animation-delay: 0.5s; }
+        .dplayer .dplayer-bezel .diplayer-loading-icon .diplayer-loading-dot.diplayer-loading-dot-4 {
+          -webkit-animation-delay: 0.4s;
+                  animation-delay: 0.4s; }
+        .dplayer .dplayer-bezel .diplayer-loading-icon .diplayer-loading-dot.diplayer-loading-dot-3 {
+          -webkit-animation-delay: 0.3s;
+                  animation-delay: 0.3s; }
+        .dplayer .dplayer-bezel .diplayer-loading-icon .diplayer-loading-dot.diplayer-loading-dot-2 {
+          -webkit-animation-delay: 0.2s;
+                  animation-delay: 0.2s; }
+        .dplayer .dplayer-bezel .diplayer-loading-icon .diplayer-loading-dot.diplayer-loading-dot-1 {
+          -webkit-animation-delay: 0.1s;
+                  animation-delay: 0.1s; }
+
+@-webkit-keyframes diplayer-loading-dot-fade {
+  0% {
+    opacity: .7;
+    -webkit-transform: scale(1.2, 1.2);
+            transform: scale(1.2, 1.2); }
+  50% {
+    opacity: .25;
+    -webkit-transform: scale(0.9, 0.9);
+            transform: scale(0.9, 0.9); }
+  to {
+    opacity: .25;
+    -webkit-transform: scale(0.85, 0.85);
+            transform: scale(0.85, 0.85); } }
+
+@keyframes diplayer-loading-dot-fade {
+  0% {
+    opacity: .7;
+    -webkit-transform: scale(1.2, 1.2);
+            transform: scale(1.2, 1.2); }
+  50% {
+    opacity: .25;
+    -webkit-transform: scale(0.9, 0.9);
+            transform: scale(0.9, 0.9); }
+  to {
+    opacity: .25;
+    -webkit-transform: scale(0.85, 0.85);
+            transform: scale(0.85, 0.85); } }
+  .dplayer .dplayer-controller-mask {
+    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAADGCAYAAAAT+OqFAAAAdklEQVQoz42QQQ7AIAgEF/T/D+kbq/RWAlnQyyazA4aoAB4FsBSA/bFjuF1EOL7VbrIrBuusmrt4ZZORfb6ehbWdnRHEIiITaEUKa5EJqUakRSaEYBJSCY2dEstQY7AuxahwXFrvZmWl2rh4JZ07z9dLtesfNj5q0FU3A5ObbwAAAABJRU5ErkJggg==) repeat-x bottom;
+    height: 98px;
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+    -webkit-transition: all 0.3s ease;
+    transition: all 0.3s ease; }
+  .dplayer .dplayer-controller {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 41px;
+    padding: 0 20px;
+    -webkit-user-select: none;
+       -moz-user-select: none;
+        -ms-user-select: none;
+            user-select: none;
+    -webkit-transition: all 0.3s ease;
+    transition: all 0.3s ease; }
+    .dplayer .dplayer-controller .dplayer-bar-wrap {
+      padding: 5px 0;
+      cursor: pointer;
+      position: absolute;
+      bottom: 33px;
+      width: calc(100% - 40px);
+      height: 3px; }
+      .dplayer .dplayer-controller .dplayer-bar-wrap:hover .dplayer-thumb {
+        -webkit-transform: scale(1) !important;
+                transform: scale(1) !important; }
+      .dplayer .dplayer-controller .dplayer-bar-wrap .dplayer-bar {
+        position: relative;
+        height: 3px;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.2);
+        cursor: pointer !important; }
+        .dplayer .dplayer-controller .dplayer-bar-wrap .dplayer-bar .dplayer-loaded {
+          position: absolute;
+          left: 0;
+          top: 0;
+          bottom: 0;
+          background: rgba(255, 255, 255, 0.4);
+          height: 3px;
+          -webkit-transition: all 0.5s ease;
+          transition: all 0.5s ease;
+          will-change: width; }
+        .dplayer .dplayer-controller .dplayer-bar-wrap .dplayer-bar .dplayer-played {
+          position: absolute;
+          left: 0;
+          top: 0;
+          bottom: 0;
+          height: 3px;
+          will-change: width; }
+          .dplayer .dplayer-controller .dplayer-bar-wrap .dplayer-bar .dplayer-played .dplayer-thumb {
+            position: absolute;
+            top: 0;
+            right: 5px;
+            margin-top: -4px;
+            margin-right: -10px;
+            height: 11px;
+            width: 11px;
+            border-radius: 50%;
+            cursor: pointer !important;
+            -webkit-transition: all .3s ease-in-out;
+            transition: all .3s ease-in-out;
+            -webkit-transform: scale(0);
+                    transform: scale(0); }
+    .dplayer .dplayer-controller .dplayer-icons {
+      height: 38px;
+      position: absolute;
+      bottom: 0; }
+      .dplayer .dplayer-controller .dplayer-icons.dplayer-icons-left .dplayer-icon {
+        padding: 7px; }
+      .dplayer .dplayer-controller .dplayer-icons.dplayer-icons-right {
+        right: 20px; }
+        .dplayer .dplayer-controller .dplayer-icons.dplayer-icons-right .dplayer-icon {
+          padding: 8px; }
+      .dplayer .dplayer-controller .dplayer-icons #dplayer-menu {
+        stroke: #ddd;
+        stroke-width: 1px; }
+      .dplayer .dplayer-controller .dplayer-icons .dplayer-time {
+        line-height: 38px;
+        color: #eee;
+        text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+        vertical-align: middle;
+        font-size: 13px;
+        cursor: default; }
+      .dplayer .dplayer-controller .dplayer-icons .dplayer-icon {
+        width: 46px;
+        height: 100%;
+        border: none;
+        background-color: transparent;
+        outline: none;
+        cursor: pointer;
+        opacity: .8;
+        -webkit-transition: all .2s ease-in-out;
+        transition: all .2s ease-in-out;
+        vertical-align: middle;
+        box-sizing: border-box;
+        display: inline-block; }
+        .dplayer .dplayer-controller .dplayer-icons .dplayer-icon:hover {
+          opacity: 1; }
+        .dplayer .dplayer-controller .dplayer-icons .dplayer-icon.dplayer-comment-icon {
+          padding: 10px 9px 9px; }
+        .dplayer .dplayer-controller .dplayer-icons .dplayer-icon.dplayer-setting-icon {
+          padding-top: 8.5px; }
+      .dplayer .dplayer-controller .dplayer-icons .dplayer-fill {
+        fill: #fff; }
+      .dplayer .dplayer-controller .dplayer-icons .dplayer-volume {
+        position: relative;
+        display: inline-block;
+        cursor: pointer !important;
+        height: 100%; }
+        .dplayer .dplayer-controller .dplayer-icons .dplayer-volume:hover .dplayer-volume-bar {
+          width: 45px !important; }
+        .dplayer .dplayer-controller .dplayer-icons .dplayer-volume:hover .dplayer-thumb {
+          -webkit-transform: scale(1) !important;
+                  transform: scale(1) !important; }
+        .dplayer .dplayer-controller .dplayer-icons .dplayer-volume.dplayer-volume-active .dplayer-volume-bar {
+          width: 45px !important; }
+        .dplayer .dplayer-controller .dplayer-icons .dplayer-volume.dplayer-volume-active .dplayer-thumb {
+          -webkit-transform: scale(1) !important;
+                  transform: scale(1) !important; }
+        .dplayer .dplayer-controller .dplayer-icons .dplayer-volume .dplayer-volume-bar-wrap {
+          display: inline-block;
+          margin: 0 5px 0 -5px;
+          vertical-align: middle;
+          height: 100%; }
+          .dplayer .dplayer-controller .dplayer-icons .dplayer-volume .dplayer-volume-bar-wrap .dplayer-volume-bar {
+            position: relative;
+            top: 17px;
+            width: 0;
+            height: 3px;
+            background: #aaa;
+            -webkit-transition: all 0.3s ease-in-out;
+            transition: all 0.3s ease-in-out; }
+            .dplayer .dplayer-controller .dplayer-icons .dplayer-volume .dplayer-volume-bar-wrap .dplayer-volume-bar .dplayer-volume-bar-inner {
+              position: absolute;
+              bottom: 0;
+              left: 0;
+              height: 100%;
+              -webkit-transition: all 0.1s ease;
+              transition: all 0.1s ease;
+              will-change: width; }
+              .dplayer .dplayer-controller .dplayer-icons .dplayer-volume .dplayer-volume-bar-wrap .dplayer-volume-bar .dplayer-volume-bar-inner .dplayer-thumb {
+                position: absolute;
+                top: 0;
+                right: 5px;
+                margin-top: -4px;
+                margin-right: -10px;
+                height: 11px;
+                width: 11px;
+                border-radius: 50%;
+                cursor: pointer !important;
+                -webkit-transition: all .3s ease-in-out;
+                transition: all .3s ease-in-out;
+                -webkit-transform: scale(0);
+                        transform: scale(0); }
+      .dplayer .dplayer-controller .dplayer-icons .dplayer-setting {
+        display: inline-block;
+        height: 100%; }
+        .dplayer .dplayer-controller .dplayer-icons .dplayer-setting .dplayer-setting-box {
+          position: absolute;
+          right: 0;
+          bottom: 50px;
+          -webkit-transform: translateX(170px);
+                  transform: translateX(170px);
+          width: 150px;
+          height: 120px;
+          border-radius: 2px;
+          background: rgba(28, 28, 28, 0.9);
+          padding: 7px 0;
+          -webkit-transition: all .3s ease-in-out;
+          transition: all .3s ease-in-out;
+          overflow: hidden;
+          z-index: 2; }
+          .dplayer .dplayer-controller .dplayer-icons .dplayer-setting .dplayer-setting-box.dplayer-setting-box-open {
+            -webkit-transform: translateX(0);
+                    transform: translateX(0); }
+          .dplayer .dplayer-controller .dplayer-icons .dplayer-setting .dplayer-setting-box.dplayer-setting-box-narrow {
+            width: 70px;
+            height: 180px;
+            text-align: center; }
+        .dplayer .dplayer-controller .dplayer-icons .dplayer-setting .dplayer-setting-item,
+        .dplayer .dplayer-controller .dplayer-icons .dplayer-setting .dplayer-setting-speed-item {
+          height: 30px;
+          padding: 5px 10px;
+          box-sizing: border-box;
+          cursor: pointer; }
+          .dplayer .dplayer-controller .dplayer-icons .dplayer-setting .dplayer-setting-item:hover,
+          .dplayer .dplayer-controller .dplayer-icons .dplayer-setting .dplayer-setting-speed-item:hover {
+            background-color: rgba(255, 255, 255, 0.1); }
+        .dplayer .dplayer-controller .dplayer-icons .dplayer-setting .dplayer-setting-danmaku {
+          padding: 5px 0; }
+          .dplayer .dplayer-controller .dplayer-icons .dplayer-setting .dplayer-setting-danmaku .dplayer-label {
+            padding: 0 10px;
+            display: inline; }
+          .dplayer .dplayer-controller .dplayer-icons .dplayer-setting .dplayer-setting-danmaku:hover .dplayer-label {
+            display: none; }
+          .dplayer .dplayer-controller .dplayer-icons .dplayer-setting .dplayer-setting-danmaku:hover .dplayer-danmaku-bar-wrap {
+            display: inline-block; }
+          .dplayer .dplayer-controller .dplayer-icons .dplayer-setting .dplayer-setting-danmaku.dplayer-setting-danmaku-active .dplayer-label {
+            display: none; }
+          .dplayer .dplayer-controller .dplayer-icons .dplayer-setting .dplayer-setting-danmaku.dplayer-setting-danmaku-active .dplayer-danmaku-bar-wrap {
+            display: inline-block; }
+          .dplayer .dplayer-controller .dplayer-icons .dplayer-setting .dplayer-setting-danmaku .dplayer-danmaku-bar-wrap {
+            padding: 0 10px;
+            box-sizing: border-box;
+            display: none;
+            vertical-align: middle;
+            height: 100%;
+            width: 100%; }
+            .dplayer .dplayer-controller .dplayer-icons .dplayer-setting .dplayer-setting-danmaku .dplayer-danmaku-bar-wrap .dplayer-danmaku-bar {
+              position: relative;
+              top: 8.5px;
+              width: 100%;
+              height: 3px;
+              background: #fff;
+              -webkit-transition: all 0.3s ease-in-out;
+              transition: all 0.3s ease-in-out; }
+              .dplayer .dplayer-controller .dplayer-icons .dplayer-setting .dplayer-setting-danmaku .dplayer-danmaku-bar-wrap .dplayer-danmaku-bar .dplayer-danmaku-bar-inner {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                height: 100%;
+                -webkit-transition: all 0.1s ease;
+                transition: all 0.1s ease;
+                background: #aaa;
+                will-change: width; }
+                .dplayer .dplayer-controller .dplayer-icons .dplayer-setting .dplayer-setting-danmaku .dplayer-danmaku-bar-wrap .dplayer-danmaku-bar .dplayer-danmaku-bar-inner .dplayer-thumb {
+                  position: absolute;
+                  top: 0;
+                  right: 5px;
+                  margin-top: -4px;
+                  margin-right: -10px;
+                  height: 11px;
+                  width: 11px;
+                  border-radius: 50%;
+                  cursor: pointer !important;
+                  -webkit-transition: all .3s ease-in-out;
+                  transition: all .3s ease-in-out;
+                  background: #aaa; }
+      .dplayer .dplayer-controller .dplayer-icons .dplayer-comment {
+        display: inline-block;
+        height: 100%; }
+        .dplayer .dplayer-controller .dplayer-icons .dplayer-comment .dplayer-comment-box {
+          position: absolute;
+          right: 0;
+          bottom: 50px;
+          -webkit-transform: translateX(382px);
+                  transform: translateX(382px);
+          border-radius: 2px;
+          -webkit-transition: all .3s ease-in-out;
+          transition: all .3s ease-in-out;
+          z-index: 2; }
+          .dplayer .dplayer-controller .dplayer-icons .dplayer-comment .dplayer-comment-box.dplayer-comment-box-open {
+            -webkit-transform: translateX(0);
+                    transform: translateX(0); }
+          .dplayer .dplayer-controller .dplayer-icons .dplayer-comment .dplayer-comment-box .dplayer-comment-setting-icon {
+            height: 24px;
+            width: 24px;
+            position: absolute;
+            top: 5px;
+            left: 7px;
+            padding: 0;
+            opacity: 1; }
+            .dplayer .dplayer-controller .dplayer-icons .dplayer-comment .dplayer-comment-box .dplayer-comment-setting-icon:hover .dplayer-fill {
+              fill: #aaa; }
+            .dplayer .dplayer-controller .dplayer-icons .dplayer-comment .dplayer-comment-box .dplayer-comment-setting-icon .dplayer-fill {
+              -webkit-transition: all .2s ease-in-out;
+              transition: all .2s ease-in-out;
+              fill: #ddd; }
+          .dplayer .dplayer-controller .dplayer-icons .dplayer-comment .dplayer-comment-box .dplayer-comment-setting-box {
+            position: absolute;
+            background: #fff;
+            bottom: 40px;
+            left: -93px;
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            padding: 10px 10px 16px;
+            font-size: 14px;
+            width: 204px;
+            -webkit-transition: all .3s ease-in-out;
+            transition: all .3s ease-in-out;
+            -webkit-transform: scale(0);
+                    transform: scale(0); }
+            .dplayer .dplayer-controller .dplayer-icons .dplayer-comment .dplayer-comment-box .dplayer-comment-setting-box.dplayer-comment-setting-open {
+              -webkit-transform: scale(1);
+                      transform: scale(1); }
+            .dplayer .dplayer-controller .dplayer-icons .dplayer-comment .dplayer-comment-box .dplayer-comment-setting-box::after {
+              content: '';
+              position: absolute;
+              top: 100%;
+              left: 50%;
+              margin-left: -12px;
+              background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 12"><path fill="#FFF" d="M23.7,0c-1.2,0-2.4,0.5-3.2,1.3l-7.7,7.8c-0.4,0.4-1.1,0.4-1.5,0L3.5,1.3C2.7,0.5,1.5,0,0.3,0"/></svg>');
+              width: 24px;
+              height: 12px; }
+            .dplayer .dplayer-controller .dplayer-icons .dplayer-comment .dplayer-comment-box .dplayer-comment-setting-box input[type=radio] {
+              display: none; }
+            .dplayer .dplayer-controller .dplayer-icons .dplayer-comment .dplayer-comment-box .dplayer-comment-setting-box label {
+              cursor: pointer; }
+            .dplayer .dplayer-controller .dplayer-icons .dplayer-comment .dplayer-comment-box .dplayer-comment-setting-box .dplayer-comment-setting-title {
+              font-size: 14px;
+              color: #555;
+              padding: 6px; }
+            .dplayer .dplayer-controller .dplayer-icons .dplayer-comment .dplayer-comment-box .dplayer-comment-setting-box .dplayer-comment-setting-type {
+              font-size: 0; }
+              .dplayer .dplayer-controller .dplayer-icons .dplayer-comment .dplayer-comment-box .dplayer-comment-setting-box .dplayer-comment-setting-type label:nth-child(2) span {
+                border-radius: 4px 0 0 4px; }
+              .dplayer .dplayer-controller .dplayer-icons .dplayer-comment .dplayer-comment-box .dplayer-comment-setting-box .dplayer-comment-setting-type label:nth-child(4) span {
+                border-radius: 0 4px 4px 0; }
+              .dplayer .dplayer-controller .dplayer-icons .dplayer-comment .dplayer-comment-box .dplayer-comment-setting-box .dplayer-comment-setting-type span {
+                width: 33%;
+                padding: 4px 6px;
+                line-height: 16px;
+                display: inline-block;
+                font-size: 12px;
+                color: #555;
+                border: 1px solid #E4E4E6;
+                margin-right: -1px;
+                box-sizing: border-box;
+                text-align: center;
+                cursor: pointer; }
+              .dplayer .dplayer-controller .dplayer-icons .dplayer-comment .dplayer-comment-box .dplayer-comment-setting-box .dplayer-comment-setting-type input:checked + span {
+                background: #E4E4E6; }
+            .dplayer .dplayer-controller .dplayer-icons .dplayer-comment .dplayer-comment-box .dplayer-comment-setting-box .dplayer-comment-setting-color {
+              font-size: 0; }
+              .dplayer .dplayer-controller .dplayer-icons .dplayer-comment .dplayer-comment-box .dplayer-comment-setting-box .dplayer-comment-setting-color label {
+                font-size: 0;
+                padding: 6px;
+                display: inline-block; }
+              .dplayer .dplayer-controller .dplayer-icons .dplayer-comment .dplayer-comment-box .dplayer-comment-setting-box .dplayer-comment-setting-color span {
+                width: 22px;
+                height: 22px;
+                display: inline-block;
+                border-radius: 50%;
+                box-sizing: border-box;
+                cursor: pointer; }
+                .dplayer .dplayer-controller .dplayer-icons .dplayer-comment .dplayer-comment-box .dplayer-comment-setting-box .dplayer-comment-setting-color span:hover {
+                  -webkit-animation: my-face 5s infinite ease-in-out;
+                          animation: my-face 5s infinite ease-in-out;
+                  box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.12); }
+              .dplayer .dplayer-controller .dplayer-icons .dplayer-comment .dplayer-comment-box .dplayer-comment-setting-box .dplayer-comment-setting-color input:checked + span {
+                box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14), 0 3px 1px -2px rgba(0, 0, 0, 0.2), 0 1px 5px 0 rgba(0, 0, 0, 0.12);
+                border: none !important; }
+          .dplayer .dplayer-controller .dplayer-icons .dplayer-comment .dplayer-comment-box .dplayer-comment-input {
+            outline: none;
+            border: none;
+            padding: 8px 31px;
+            font-size: 14px;
+            line-height: 18px;
+            text-align: center;
+            border-radius: 4px;
+            width: 300px;
+            background: #fff;
+            margin: 0;
+            height: auto; }
+          .dplayer .dplayer-controller .dplayer-icons .dplayer-comment .dplayer-comment-box .dplayer-send-icon {
+            height: 22px;
+            width: 22px;
+            position: absolute;
+            top: 6px;
+            right: 7px;
+            padding: 0;
+            opacity: 1; }
+            .dplayer .dplayer-controller .dplayer-icons .dplayer-comment .dplayer-comment-box .dplayer-send-icon:hover .dplayer-fill {
+              fill: #aaa; }
+            .dplayer .dplayer-controller .dplayer-icons .dplayer-comment .dplayer-comment-box .dplayer-send-icon .dplayer-fill {
+              -webkit-transition: all .2s ease-in-out;
+              transition: all .2s ease-in-out;
+              fill: #ddd; }
+      .dplayer .dplayer-controller .dplayer-icons .dplayer-label {
+        color: #eee;
+        font-size: 13px;
+        display: inline-block;
+        vertical-align: middle; }
+      .dplayer .dplayer-controller .dplayer-icons .dplayer-toggle {
+        width: 32px;
+        height: 100%;
+        text-align: center;
+        display: inline-block;
+        font-size: 0;
+        vertical-align: middle;
+        float: right; }
+        .dplayer .dplayer-controller .dplayer-icons .dplayer-toggle input {
+          max-height: 0;
+          max-width: 0;
+          display: none; }
+        .dplayer .dplayer-controller .dplayer-icons .dplayer-toggle input + label {
+          display: inline-block;
+          position: relative;
+          box-shadow: #dfdfdf 0 0 0 0 inset;
+          border: 1px solid #dfdfdf;
+          height: 20px;
+          width: 32px;
+          border-radius: 10px;
+          box-sizing: border-box;
+          cursor: pointer;
+          -webkit-transition: .2s ease-in-out;
+          transition: .2s ease-in-out; }
+        .dplayer .dplayer-controller .dplayer-icons .dplayer-toggle input + label:before {
+          content: "";
+          position: absolute;
+          display: block;
+          height: 18px;
+          width: 18px;
+          top: 0;
+          left: 0;
+          border-radius: 15px;
+          -webkit-transition: .2s ease-in-out;
+          transition: .2s ease-in-out; }
+        .dplayer .dplayer-controller .dplayer-icons .dplayer-toggle input + label:after {
+          content: "";
+          position: absolute;
+          display: block;
+          left: 0;
+          top: 0;
+          border-radius: 15px;
+          background: #fff;
+          -webkit-transition: .2s ease-in-out;
+          transition: .2s ease-in-out;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+          height: 18px;
+          width: 18px; }
+        .dplayer .dplayer-controller .dplayer-icons .dplayer-toggle input:checked + label {
+          border-color: rgba(255, 255, 255, 0.5); }
+        .dplayer .dplayer-controller .dplayer-icons .dplayer-toggle input:checked + label:before {
+          width: 30px;
+          background: rgba(255, 255, 255, 0.5); }
+        .dplayer .dplayer-controller .dplayer-icons .dplayer-toggle input:checked + label:after {
+          left: 12px; }
+  .dplayer .dplayer-menu {
+    position: absolute;
+    width: 150px;
+    border-radius: 2px;
+    background: rgba(28, 28, 28, 0.9);
+    padding: 5px 0;
+    overflow: hidden;
+    z-index: 3;
+    display: none; }
+    .dplayer .dplayer-menu.dplayer-menu-show {
+      display: block; }
+    .dplayer .dplayer-menu .dplayer-menu-item {
+      height: 30px;
+      padding: 5px 10px;
+      box-sizing: border-box;
+      cursor: pointer; }
+      .dplayer .dplayer-menu .dplayer-menu-item:hover {
+        background-color: rgba(255, 255, 255, 0.1); }
+      .dplayer .dplayer-menu .dplayer-menu-item .dplayer-menu-label a {
+        color: #eee;
+        font-size: 13px;
+        display: inline-block;
+        vertical-align: middle; }
+
+@-webkit-keyframes my-face {
+  2% {
+    -webkit-transform: translate(0, 1.5px) rotate(1.5deg);
+            transform: translate(0, 1.5px) rotate(1.5deg); }
+  4% {
+    -webkit-transform: translate(0, -1.5px) rotate(-0.5deg);
+            transform: translate(0, -1.5px) rotate(-0.5deg); }
+  6% {
+    -webkit-transform: translate(0, 1.5px) rotate(-1.5deg);
+            transform: translate(0, 1.5px) rotate(-1.5deg); }
+  8% {
+    -webkit-transform: translate(0, -1.5px) rotate(-1.5deg);
+            transform: translate(0, -1.5px) rotate(-1.5deg); }
+  10% {
+    -webkit-transform: translate(0, 2.5px) rotate(1.5deg);
+            transform: translate(0, 2.5px) rotate(1.5deg); }
+  12% {
+    -webkit-transform: translate(0, -0.5px) rotate(1.5deg);
+            transform: translate(0, -0.5px) rotate(1.5deg); }
+  14% {
+    -webkit-transform: translate(0, -1.5px) rotate(1.5deg);
+            transform: translate(0, -1.5px) rotate(1.5deg); }
+  16% {
+    -webkit-transform: translate(0, -0.5px) rotate(-1.5deg);
+            transform: translate(0, -0.5px) rotate(-1.5deg); }
+  18% {
+    -webkit-transform: translate(0, 0.5px) rotate(-1.5deg);
+            transform: translate(0, 0.5px) rotate(-1.5deg); }
+  20% {
+    -webkit-transform: translate(0, -1.5px) rotate(2.5deg);
+            transform: translate(0, -1.5px) rotate(2.5deg); }
+  22% {
+    -webkit-transform: translate(0, 0.5px) rotate(-1.5deg);
+            transform: translate(0, 0.5px) rotate(-1.5deg); }
+  24% {
+    -webkit-transform: translate(0, 1.5px) rotate(1.5deg);
+            transform: translate(0, 1.5px) rotate(1.5deg); }
+  26% {
+    -webkit-transform: translate(0, 0.5px) rotate(0.5deg);
+            transform: translate(0, 0.5px) rotate(0.5deg); }
+  28% {
+    -webkit-transform: translate(0, 0.5px) rotate(1.5deg);
+            transform: translate(0, 0.5px) rotate(1.5deg); }
+  30% {
+    -webkit-transform: translate(0, -0.5px) rotate(2.5deg);
+            transform: translate(0, -0.5px) rotate(2.5deg); }
+  32% {
+    -webkit-transform: translate(0, 1.5px) rotate(-0.5deg);
+            transform: translate(0, 1.5px) rotate(-0.5deg); }
+  34% {
+    -webkit-transform: translate(0, 1.5px) rotate(-0.5deg);
+            transform: translate(0, 1.5px) rotate(-0.5deg); }
+  36% {
+    -webkit-transform: translate(0, -1.5px) rotate(2.5deg);
+            transform: translate(0, -1.5px) rotate(2.5deg); }
+  38% {
+    -webkit-transform: translate(0, 1.5px) rotate(-1.5deg);
+            transform: translate(0, 1.5px) rotate(-1.5deg); }
+  40% {
+    -webkit-transform: translate(0, -0.5px) rotate(2.5deg);
+            transform: translate(0, -0.5px) rotate(2.5deg); }
+  42% {
+    -webkit-transform: translate(0, 2.5px) rotate(-1.5deg);
+            transform: translate(0, 2.5px) rotate(-1.5deg); }
+  44% {
+    -webkit-transform: translate(0, 1.5px) rotate(0.5deg);
+            transform: translate(0, 1.5px) rotate(0.5deg); }
+  46% {
+    -webkit-transform: translate(0, -1.5px) rotate(2.5deg);
+            transform: translate(0, -1.5px) rotate(2.5deg); }
+  48% {
+    -webkit-transform: translate(0, -0.5px) rotate(0.5deg);
+            transform: translate(0, -0.5px) rotate(0.5deg); }
+  50% {
+    -webkit-transform: translate(0, 0.5px) rotate(0.5deg);
+            transform: translate(0, 0.5px) rotate(0.5deg); }
+  52% {
+    -webkit-transform: translate(0, 2.5px) rotate(2.5deg);
+            transform: translate(0, 2.5px) rotate(2.5deg); }
+  54% {
+    -webkit-transform: translate(0, -1.5px) rotate(1.5deg);
+            transform: translate(0, -1.5px) rotate(1.5deg); }
+  56% {
+    -webkit-transform: translate(0, 2.5px) rotate(2.5deg);
+            transform: translate(0, 2.5px) rotate(2.5deg); }
+  58% {
+    -webkit-transform: translate(0, 0.5px) rotate(2.5deg);
+            transform: translate(0, 0.5px) rotate(2.5deg); }
+  60% {
+    -webkit-transform: translate(0, 2.5px) rotate(2.5deg);
+            transform: translate(0, 2.5px) rotate(2.5deg); }
+  62% {
+    -webkit-transform: translate(0, -0.5px) rotate(2.5deg);
+            transform: translate(0, -0.5px) rotate(2.5deg); }
+  64% {
+    -webkit-transform: translate(0, -0.5px) rotate(1.5deg);
+            transform: translate(0, -0.5px) rotate(1.5deg); }
+  66% {
+    -webkit-transform: translate(0, 1.5px) rotate(-0.5deg);
+            transform: translate(0, 1.5px) rotate(-0.5deg); }
+  68% {
+    -webkit-transform: translate(0, -1.5px) rotate(-0.5deg);
+            transform: translate(0, -1.5px) rotate(-0.5deg); }
+  70% {
+    -webkit-transform: translate(0, 1.5px) rotate(0.5deg);
+            transform: translate(0, 1.5px) rotate(0.5deg); }
+  72% {
+    -webkit-transform: translate(0, 2.5px) rotate(1.5deg);
+            transform: translate(0, 2.5px) rotate(1.5deg); }
+  74% {
+    -webkit-transform: translate(0, -0.5px) rotate(0.5deg);
+            transform: translate(0, -0.5px) rotate(0.5deg); }
+  76% {
+    -webkit-transform: translate(0, -0.5px) rotate(2.5deg);
+            transform: translate(0, -0.5px) rotate(2.5deg); }
+  78% {
+    -webkit-transform: translate(0, -0.5px) rotate(1.5deg);
+            transform: translate(0, -0.5px) rotate(1.5deg); }
+  80% {
+    -webkit-transform: translate(0, 1.5px) rotate(1.5deg);
+            transform: translate(0, 1.5px) rotate(1.5deg); }
+  82% {
+    -webkit-transform: translate(0, -0.5px) rotate(0.5deg);
+            transform: translate(0, -0.5px) rotate(0.5deg); }
+  84% {
+    -webkit-transform: translate(0, 1.5px) rotate(2.5deg);
+            transform: translate(0, 1.5px) rotate(2.5deg); }
+  86% {
+    -webkit-transform: translate(0, -1.5px) rotate(-1.5deg);
+            transform: translate(0, -1.5px) rotate(-1.5deg); }
+  88% {
+    -webkit-transform: translate(0, -0.5px) rotate(2.5deg);
+            transform: translate(0, -0.5px) rotate(2.5deg); }
+  90% {
+    -webkit-transform: translate(0, 2.5px) rotate(-0.5deg);
+            transform: translate(0, 2.5px) rotate(-0.5deg); }
+  92% {
+    -webkit-transform: translate(0, 0.5px) rotate(-0.5deg);
+            transform: translate(0, 0.5px) rotate(-0.5deg); }
+  94% {
+    -webkit-transform: translate(0, 2.5px) rotate(0.5deg);
+            transform: translate(0, 2.5px) rotate(0.5deg); }
+  96% {
+    -webkit-transform: translate(0, -0.5px) rotate(1.5deg);
+            transform: translate(0, -0.5px) rotate(1.5deg); }
+  98% {
+    -webkit-transform: translate(0, -1.5px) rotate(-0.5deg);
+            transform: translate(0, -1.5px) rotate(-0.5deg); }
+  0%, 100% {
+    -webkit-transform: translate(0, 0) rotate(0deg);
+            transform: translate(0, 0) rotate(0deg); } }
+
+@keyframes my-face {
+  2% {
+    -webkit-transform: translate(0, 1.5px) rotate(1.5deg);
+            transform: translate(0, 1.5px) rotate(1.5deg); }
+  4% {
+    -webkit-transform: translate(0, -1.5px) rotate(-0.5deg);
+            transform: translate(0, -1.5px) rotate(-0.5deg); }
+  6% {
+    -webkit-transform: translate(0, 1.5px) rotate(-1.5deg);
+            transform: translate(0, 1.5px) rotate(-1.5deg); }
+  8% {
+    -webkit-transform: translate(0, -1.5px) rotate(-1.5deg);
+            transform: translate(0, -1.5px) rotate(-1.5deg); }
+  10% {
+    -webkit-transform: translate(0, 2.5px) rotate(1.5deg);
+            transform: translate(0, 2.5px) rotate(1.5deg); }
+  12% {
+    -webkit-transform: translate(0, -0.5px) rotate(1.5deg);
+            transform: translate(0, -0.5px) rotate(1.5deg); }
+  14% {
+    -webkit-transform: translate(0, -1.5px) rotate(1.5deg);
+            transform: translate(0, -1.5px) rotate(1.5deg); }
+  16% {
+    -webkit-transform: translate(0, -0.5px) rotate(-1.5deg);
+            transform: translate(0, -0.5px) rotate(-1.5deg); }
+  18% {
+    -webkit-transform: translate(0, 0.5px) rotate(-1.5deg);
+            transform: translate(0, 0.5px) rotate(-1.5deg); }
+  20% {
+    -webkit-transform: translate(0, -1.5px) rotate(2.5deg);
+            transform: translate(0, -1.5px) rotate(2.5deg); }
+  22% {
+    -webkit-transform: translate(0, 0.5px) rotate(-1.5deg);
+            transform: translate(0, 0.5px) rotate(-1.5deg); }
+  24% {
+    -webkit-transform: translate(0, 1.5px) rotate(1.5deg);
+            transform: translate(0, 1.5px) rotate(1.5deg); }
+  26% {
+    -webkit-transform: translate(0, 0.5px) rotate(0.5deg);
+            transform: translate(0, 0.5px) rotate(0.5deg); }
+  28% {
+    -webkit-transform: translate(0, 0.5px) rotate(1.5deg);
+            transform: translate(0, 0.5px) rotate(1.5deg); }
+  30% {
+    -webkit-transform: translate(0, -0.5px) rotate(2.5deg);
+            transform: translate(0, -0.5px) rotate(2.5deg); }
+  32% {
+    -webkit-transform: translate(0, 1.5px) rotate(-0.5deg);
+            transform: translate(0, 1.5px) rotate(-0.5deg); }
+  34% {
+    -webkit-transform: translate(0, 1.5px) rotate(-0.5deg);
+            transform: translate(0, 1.5px) rotate(-0.5deg); }
+  36% {
+    -webkit-transform: translate(0, -1.5px) rotate(2.5deg);
+            transform: translate(0, -1.5px) rotate(2.5deg); }
+  38% {
+    -webkit-transform: translate(0, 1.5px) rotate(-1.5deg);
+            transform: translate(0, 1.5px) rotate(-1.5deg); }
+  40% {
+    -webkit-transform: translate(0, -0.5px) rotate(2.5deg);
+            transform: translate(0, -0.5px) rotate(2.5deg); }
+  42% {
+    -webkit-transform: translate(0, 2.5px) rotate(-1.5deg);
+            transform: translate(0, 2.5px) rotate(-1.5deg); }
+  44% {
+    -webkit-transform: translate(0, 1.5px) rotate(0.5deg);
+            transform: translate(0, 1.5px) rotate(0.5deg); }
+  46% {
+    -webkit-transform: translate(0, -1.5px) rotate(2.5deg);
+            transform: translate(0, -1.5px) rotate(2.5deg); }
+  48% {
+    -webkit-transform: translate(0, -0.5px) rotate(0.5deg);
+            transform: translate(0, -0.5px) rotate(0.5deg); }
+  50% {
+    -webkit-transform: translate(0, 0.5px) rotate(0.5deg);
+            transform: translate(0, 0.5px) rotate(0.5deg); }
+  52% {
+    -webkit-transform: translate(0, 2.5px) rotate(2.5deg);
+            transform: translate(0, 2.5px) rotate(2.5deg); }
+  54% {
+    -webkit-transform: translate(0, -1.5px) rotate(1.5deg);
+            transform: translate(0, -1.5px) rotate(1.5deg); }
+  56% {
+    -webkit-transform: translate(0, 2.5px) rotate(2.5deg);
+            transform: translate(0, 2.5px) rotate(2.5deg); }
+  58% {
+    -webkit-transform: translate(0, 0.5px) rotate(2.5deg);
+            transform: translate(0, 0.5px) rotate(2.5deg); }
+  60% {
+    -webkit-transform: translate(0, 2.5px) rotate(2.5deg);
+            transform: translate(0, 2.5px) rotate(2.5deg); }
+  62% {
+    -webkit-transform: translate(0, -0.5px) rotate(2.5deg);
+            transform: translate(0, -0.5px) rotate(2.5deg); }
+  64% {
+    -webkit-transform: translate(0, -0.5px) rotate(1.5deg);
+            transform: translate(0, -0.5px) rotate(1.5deg); }
+  66% {
+    -webkit-transform: translate(0, 1.5px) rotate(-0.5deg);
+            transform: translate(0, 1.5px) rotate(-0.5deg); }
+  68% {
+    -webkit-transform: translate(0, -1.5px) rotate(-0.5deg);
+            transform: translate(0, -1.5px) rotate(-0.5deg); }
+  70% {
+    -webkit-transform: translate(0, 1.5px) rotate(0.5deg);
+            transform: translate(0, 1.5px) rotate(0.5deg); }
+  72% {
+    -webkit-transform: translate(0, 2.5px) rotate(1.5deg);
+            transform: translate(0, 2.5px) rotate(1.5deg); }
+  74% {
+    -webkit-transform: translate(0, -0.5px) rotate(0.5deg);
+            transform: translate(0, -0.5px) rotate(0.5deg); }
+  76% {
+    -webkit-transform: translate(0, -0.5px) rotate(2.5deg);
+            transform: translate(0, -0.5px) rotate(2.5deg); }
+  78% {
+    -webkit-transform: translate(0, -0.5px) rotate(1.5deg);
+            transform: translate(0, -0.5px) rotate(1.5deg); }
+  80% {
+    -webkit-transform: translate(0, 1.5px) rotate(1.5deg);
+            transform: translate(0, 1.5px) rotate(1.5deg); }
+  82% {
+    -webkit-transform: translate(0, -0.5px) rotate(0.5deg);
+            transform: translate(0, -0.5px) rotate(0.5deg); }
+  84% {
+    -webkit-transform: translate(0, 1.5px) rotate(2.5deg);
+            transform: translate(0, 1.5px) rotate(2.5deg); }
+  86% {
+    -webkit-transform: translate(0, -1.5px) rotate(-1.5deg);
+            transform: translate(0, -1.5px) rotate(-1.5deg); }
+  88% {
+    -webkit-transform: translate(0, -0.5px) rotate(2.5deg);
+            transform: translate(0, -0.5px) rotate(2.5deg); }
+  90% {
+    -webkit-transform: translate(0, 2.5px) rotate(-0.5deg);
+            transform: translate(0, 2.5px) rotate(-0.5deg); }
+  92% {
+    -webkit-transform: translate(0, 0.5px) rotate(-0.5deg);
+            transform: translate(0, 0.5px) rotate(-0.5deg); }
+  94% {
+    -webkit-transform: translate(0, 2.5px) rotate(0.5deg);
+            transform: translate(0, 2.5px) rotate(0.5deg); }
+  96% {
+    -webkit-transform: translate(0, -0.5px) rotate(1.5deg);
+            transform: translate(0, -0.5px) rotate(1.5deg); }
+  98% {
+    -webkit-transform: translate(0, -1.5px) rotate(-0.5deg);
+            transform: translate(0, -1.5px) rotate(-0.5deg); }
+  0%, 100% {
+    -webkit-transform: translate(0, 0) rotate(0deg);
+            transform: translate(0, 0) rotate(0deg); } }
+</style><link rel="stylesheet" href="linux%E7%B3%BB%E7%BB%9F(CentOS6+%EF%BC%8CDebian7+%EF%BC%8CUbuntu12+%EF%BC%89%E6%90%AD%E5%BB%BAVPN(L2TP_IPSec)%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85%E8%84%9A%E6%9C%AC_Linux%E4%B8%93%E9%A2%98_%E5%88%9D%E8%A7%81%E5%8D%9A%E5%AE%A2_files/share_style0_24.css"></head>
+<body>
+<div class="wp" style=" background:#fff;">
+<div id="header">
+<div class="logo"><a href="http://www.hzgome.cn/" title="初见博客-zblog仿站培训_zblog模板制作教程">初见博客</a></div>
+<div class="header-nav" data-type="article" data-infoid="17">
+<ul id="menu-navigation" class="nav-menu">
+<li id="nvabar-item-index"><a href="http://www.hzgome.cn/">首页</a></li><li id="navbar-page-39"><a href="http://www.hzgome.cn/?id=39">关于初见</a></li><li id="navbar-page-41"><a href="http://www.hzgome.cn/?id=41">仿站培训</a></li><li id="navbar-page-42"><a href="http://www.hzgome.cn/?id=42">网站制作</a></li> </ul>
+<ul class="mobile-nav nav-menu">
+<li>
+<a href="http://www.hzgome.cn/">
+<i class="iconfont"></i>首页
+</a>
+ </li>
+<li>
+<a href="javascript:;" id="mobile_nav">
+<i class="iconfont"></i>菜单
+</a>
+<ul class="sub-menu" id="mobile_nav_list">
+<li id="nvabar-item-index"><a href="http://www.hzgome.cn/">首页</a></li><li id="navbar-page-39"><a href="http://www.hzgome.cn/?id=39">关于初见</a></li><li id="navbar-page-41"><a href="http://www.hzgome.cn/?id=41">仿站培训</a></li><li id="navbar-page-42"><a href="http://www.hzgome.cn/?id=42">网站制作</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<section class="container">
+<div id="content-wrap">
+<div class="article">
+<div class="wenz">
+<div class="mianbao">当前位置：<a href="http://www.hzgome.cn/">首页</a> <small>&gt;</small> <a href="http://www.hzgome.cn/?cate=8" title="查看Linux专题中的全部文章">Linux专题</a> <small>&gt;</small> <span class="muted">linux系统(CentOS6+，Debian7+，Ubuntu12+）搭建VPN(L2TP/IPSec)一键安装脚本</span></div>
+<header class="article-header"><h1 class="article-title"><a href="http://www.hzgome.cn/?id=103">linux系统(CentOS6+，Debian7+，Ubuntu12+）搭建VPN(L2TP/IPSec)一键安装脚本</a></h1>
+<div class="article-meta">
+<span class="item"><i class="fa fa-user"></i> admin</span>
+<span class="item"><i class="fa fa-clock-o"></i> 2年前 (2017-07-06)</span>
+<span class="item"><i class="fa  fa-bookmark"></i> 分类：Linux专题</span>
+<span class="item post-views"><i class="fa fa-eye"></i> 阅读(9370)</span>
+<span class="item"><i class="fa fa-comment"></i> 评论(0)</span>
+</div>
+</header>
+<div class="post-body"><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;"><strong>本脚本适用环境：</strong><br>系统支持：CentOS6+，Debian7+，Ubuntu12+<br>内存要求：≥128M<br><span style="color: red;">更新日期：2017 年 05 月 28 日</span></p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;"><strong>关于本脚本：</strong><br>名词解释如下<br>L2TP（Layer 2 Tunneling Protocol）<br>IPSec（Internet Protocol Security）<br>IKEv2 (Internet Key Exchange v2)<br>能实现 IPsec 的目前总体上有 openswan，libreswan，strongswan 这3种。<br>libreswan 是基于 openswan 的 fork，所以现在各个发行版基本已经看不到 openswan 的身影了。<br>当然也有使用 strongswan 的。</p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;">之所以要更新 L2TP 一键安装脚本，是因为随着各个 Linux 发行版不断推陈出新，原有的脚本已经不适应现在的需求。<br>本脚本通过编译安装最新版 libreswan 来实现 IPSec（CentOS7 下则是全部 yum 安装），yum 或 apt-get 来安装 xl2tpd，再根据各个发行版的使用方法不同，部署防火墙规则。</p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;"><span id="more-448"></span></p><h3 style="margin: 5px 0px 20px; font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: normal; line-height: 35px; color: rgb(85, 85, 85); text-rendering: optimizeLegibility; font-size: 16px; border-bottom-color: rgb(238, 238, 238); border-bottom-width: 1px; border-bottom-style: solid; padding-bottom: 5px; white-space: normal;"><span style="color: red;">写在前面：</span><br></h3><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;">基于 OpenVZ 虚拟化技术的 VPS 需要开启TUN/TAP才能正常使用，购买 VPS 时请先咨询服务商是否支持开启 TUN/TAP。</p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;"><span style="color: red;">OpenVZ 虚拟的 VPS 需要系统内核支持 IPSec 才行。也就是说，母服务器的内核如果不支持的话那就没办法，只能换 VPS。</span><br><span style="color: red;">因此，一般不建议在 OpenVZ 的 VPS 上安装本脚本。脚本如果检测到该 VPS 为 OpenVZ 架构，会出现警告提醒。</span></p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;">如何检测是否支持TUN模块？<br>执行命令：<br>cat /dev/net/tun<br>如果返回信息为：cat: /dev/net/tun: File descriptor in bad state 说明正常</p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;">如何检测是否支持ppp模块？<br>执行命令：<br>cat /dev/ppp<br>如果返回信息为：cat: /dev/ppp: No such device or address 说明正常<br>当然，脚本在安装时也会执行检查，如果不适用于安装，脚本会予以提示。</p><h3 style="margin: 5px 0px 20px; font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: normal; line-height: 35px; color: rgb(85, 85, 85); text-rendering: optimizeLegibility; font-size: 16px; border-bottom-color: rgb(238, 238, 238); border-bottom-width: 1px; border-bottom-style: solid; padding-bottom: 5px; white-space: normal;"><span style="color: red;">使用方法：</span><br></h3><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;">root 用户登录后，运行以下命令：</p><pre class="prettyprint lang-bsh" style="padding: 8px; font-family: 'courier new'; font-size: 12px; color: rgb(248, 248, 212); border-radius: 0px; margin-top: 20px; margin-bottom: 20px; line-height: 20px; word-break: break-all; word-wrap: break-word; white-space: pre-wrap; border: 1px solid rgb(39, 40, 34); overflow: hidden; font-stretch: normal; background-color: rgb(39, 40, 34);">wget&nbsp;--no-check-certificate&nbsp;https://raw.githubusercontent.com/teddysun/across/master/l2tp.sh
+chmod&nbsp;+x&nbsp;l2tp.sh
+./l2tp.sh</pre><pre id="best-content-1382346426" accuse="aContent" class="best-text mb-10" style="margin-top: 10px; margin-bottom: 10px; padding: 0px; font-family: 'PingFang SC', 'Lantinghei SC', 'Microsoft YaHei', arial, 宋体, sans-serif, tahoma; white-space: pre-wrap; word-wrap: break-word; font-size: 16px; line-height: 29px; color: rgb(51, 51, 51); min-height: 55px; background-color: rgb(255, 255, 255);">如果报错一般是系统没有安装wget
+-bash:&nbsp;wget:&nbsp;command&nbsp;not&nbsp;found
+如果系统是centos&nbsp;执行
+&nbsp;sudo&nbsp;yum&nbsp;-y&nbsp;install&nbsp;wget
+&nbsp;然后再次执行脚本</pre><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;">正常情况下执行后，会有如下交互界面</p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;"><a href="http://www.hzgome.cn/zb_users/upload/2017/07/20170706090207_98619.png" style="color: rgb(66, 139, 202); text-decoration: none;"><img src="linux%E7%B3%BB%E7%BB%9F(CentOS6+%EF%BC%8CDebian7+%EF%BC%8CUbuntu12+%EF%BC%89%E6%90%AD%E5%BB%BAVPN(L2TP_IPSec)%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85%E8%84%9A%E6%9C%AC_Linux%E4%B8%93%E9%A2%98_%E5%88%9D%E8%A7%81%E5%8D%9A%E5%AE%A2_files/20170706090207_98619.png" alt="L2TP" title="L2TP一键安装脚本" class="left" style="max-width: 100%; height: auto; vertical-align: middle; border: 0px;"></a></p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;"><span style="color: blue;">Please input IP-Range:</span><br><span style="color: blue;">(Default Range: 192.168.18):</span><br>输入本地IP段范围（本地电脑连接到VPS后给分配的一个本地IP地址），直接回车意味着输入默认值192.168.18</p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;"><span style="color: blue;">Please input PSK:</span><br><span style="color: blue;">(Default PSK: teddysun.com):</span><br>PSK意为预共享密钥，即指定一个密钥将来在连接时需要用到，直接回车意味着输入默认值teddysun.com</p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;"><span style="color: blue;">Please input Username:</span><br><span style="color: blue;">(Default Username: teddysun):</span><br>Username意为用户名，即第一个默认用户。直接回车意味着输入默认值teddysun</p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;"><span style="color: blue;">Please input teddysun’s password:</span><br><span style="color: blue;">(Default Password: Q4SKhu2EXQ):</span><br>输入用户的密码，默认会随机生成一个10位包含大小写字母和数字的密码，当然你也可以指定密码。</p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;"><span style="color: blue;">ServerIP:your_server_main_IP</span><br>显示你的 VPS 的主 IP（如果是多 IP 的 VPS 也只显示一个）</p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;"><span style="color: blue;">Server Local IP:192.168.18.1</span><br>显示你的 VPS 的本地 IP（默认即可）</p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;"><span style="color: blue;">Client Remote IP Range:192.168.18.2-192.168.18.254</span><br>显示 IP 段范围</p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;"><span style="color: blue;">PSK:teddysun.com</span><br>显示 PSK</p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;"><span style="color: blue;">Press any key to start…or Press Ctrl+c to cancel</span><br>按下任意按键继续，如果想取消安装，请按Ctrl+c键</p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;">安装完成后，脚本会执行 ipsec verify 命令并提示如下：</p><pre class="prettyprint lang-bsh" style="padding: 8px; font-family: 'courier new'; font-size: 12px; color: rgb(248, 248, 212); border-radius: 0px; margin-top: 20px; margin-bottom: 20px; line-height: 20px; word-break: break-all; word-wrap: break-word; white-space: pre-wrap; border: 1px solid rgb(39, 40, 34); overflow: hidden; font-stretch: normal; background-color: rgb(39, 40, 34);">If&nbsp;there&nbsp;are&nbsp;no&nbsp;[FAILED]&nbsp;above,&nbsp;then&nbsp;you&nbsp;can&nbsp;connect&nbsp;to&nbsp;your
+L2TP&nbsp;VPN&nbsp;Server&nbsp;with&nbsp;the&nbsp;default&nbsp;Username/Password&nbsp;is&nbsp;below:
+
+ServerIP:your_server_IP
+PSK:your&nbsp;PSK
+Username:your&nbsp;usename
+Password:your&nbsp;password
+
+If&nbsp;you&nbsp;want&nbsp;to&nbsp;modify&nbsp;user&nbsp;settings,&nbsp;please&nbsp;use&nbsp;command(s):
+l2tp&nbsp;-a&nbsp;(Add&nbsp;a&nbsp;user)
+l2tp&nbsp;-d&nbsp;(Delete&nbsp;a&nbsp;user)
+l2tp&nbsp;-l&nbsp;(List&nbsp;all&nbsp;users)
+l2tp&nbsp;-m&nbsp;(Modify&nbsp;a&nbsp;user&nbsp;password)
+Welcome&nbsp;to&nbsp;visit&nbsp;https://teddysun.com/448.html
+Enjoy&nbsp;it!</pre><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;">如果你要想对用户进行操作，可以使用如下命令：<br>l2tp -a 新增用户<br>l2tp -d 删除用户<br>l2tp -m 修改现有的用户的密码<br>l2tp -l 列出所有用户名和密码<br>l2tp -h 列出帮助信息</p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;"><br></p><h3 style="margin: 5px 0px 20px; font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: normal; line-height: 35px; color: rgb(85, 85, 85); text-rendering: optimizeLegibility; font-size: 16px; border-bottom-color: rgb(238, 238, 238); border-bottom-width: 1px; border-bottom-style: solid; padding-bottom: 5px; white-space: normal;"><span style="color: red;">其他事项：</span><br></h3><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;">1、脚本在安装完成后，已自动启动进程，并加入了开机自启动。<br>2、脚本会改写 iptables 或 firewalld 的规则。<br>3、脚本安装时，会即时将安装日志写到 /root/l2tp.log 文件里，如果你安装失败，可以通过此文件来寻找错误信息。</p><h3 style="margin: 5px 0px 20px; font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: normal; line-height: 35px; color: rgb(85, 85, 85); text-rendering: optimizeLegibility; font-size: 16px; border-bottom-color: rgb(238, 238, 238); border-bottom-width: 1px; border-bottom-style: solid; padding-bottom: 5px; white-space: normal;"><span style="color: red;">使用命令：</span><br></h3><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;">ipsec status （查看 IPSec 运行状态）<br>ipsec verify （查看 IPSec 检查结果）<br>/etc/init.d/ipsec start|stop|restart|status （CentOS6 下使用）<br>/etc/init.d/xl2tpd start|stop|restart （CentOS6 下使用）<br>systemctl start|stop|restart|status ipsec （CentOS7 下使用）<br>systemctl start|stop|restart xl2tpd （CentOS7 下使用）<br>service ipsec start|stop|restart|status （Debian/Ubuntu 下使用）<br>service xl2tpd start|stop|restart （Debian/Ubuntu 下使用）</p><h3 style="margin: 5px 0px 20px; font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-weight: normal; line-height: 35px; color: rgb(85, 85, 85); text-rendering: optimizeLegibility; font-size: 16px; border-bottom-color: rgb(238, 238, 238); border-bottom-width: 1px; border-bottom-style: solid; padding-bottom: 5px; white-space: normal;"><span style="color: red;">更新日志</span><br></h3><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;"><span style="color: red;">2017 年 05 月 28 日：</span><br>升级 libreswan 到版本 3.20。<br>修正 libreswan 的若干配置问题。<br>修正 xl2tpd 的端口监听配置问题。<br>修正在 CentOS 6 对 libevent2 的依赖问题，改为 yum 安装 libevent2-devel。<br>测试表明，在内网环境的 VPS 里（如AWS， IDCF，GCE，腾讯云，阿里云等）也可以正常使用了。</p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;"><span style="color: red;">2017 年 02 月 25 日：</span><br>升级 libreswan 到版本 3.19。</p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;"><span style="color: red;">2016 年 09 月 12 日：</span><br>修正了在 CentOS 6 下 libevent2 依赖的问题；<br>新增了一个 -m 选项，用以修改现有用户的密码。</p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;"><span style="color: red;">2016 年 08 月 13 日：</span><br>修正 Debian 8 下的 sd-daemon.h: No such file or directory 问题，是由于缺少依赖包 libsystemd-daemon-dev 导致的。</p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;"><span style="color: red;">2016 年 08 月 05 日：</span><br>升级 libreswan 到版本 3.18。</p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;"><span style="color: red;">2016 年 06 月 10 日：</span><br>脚本在安装完成后，新增了几个命令，便于操作用户<br>l2tp -a 新增用户<br>l2tp -d 删除用户<br>l2tp -l 列出所有用户<br>l2tp -h 列出帮助信息</p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;"><span style="color: red;">2016 年 04 月 25 日：</span><br>4、在&nbsp;<strong><a href="https://teddysun.com/t/vultr" target="_blank" style="color: rgb(66, 139, 202); text-decoration: none;">Vultr 的 Debian 7</a></strong>的系统模板下安装时，软件包 libcurl4-nss-dev 会出现依赖错误。如下所示：</p><pre class="prettyprint" style="padding: 8px; font-family: 'courier new'; font-size: 12px; color: rgb(248, 248, 212); border-radius: 0px; margin-top: 20px; margin-bottom: 20px; line-height: 20px; word-break: break-all; word-wrap: break-word; white-space: pre-wrap; border: 1px solid rgb(39, 40, 34); overflow: hidden; font-stretch: normal; background-color: rgb(39, 40, 34);">The&nbsp;following&nbsp;packages&nbsp;have&nbsp;unmet&nbsp;dependencies:
+libcurl4-nss-dev&nbsp;:&nbsp;Depends:&nbsp;libldap2-dev&nbsp;but&nbsp;it&nbsp;is&nbsp;not&nbsp;going&nbsp;to&nbsp;be&nbsp;installed
+Depends:&nbsp;librtmp-dev&nbsp;but&nbsp;it&nbsp;is&nbsp;not&nbsp;going&nbsp;to&nbsp;be&nbsp;installed</pre><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;">而 libldap2-dev 和 librtmp-dev 又依赖了其他几种软件包。总之最后的依赖关系如下：</p><pre class="prettyprint" style="padding: 8px; font-family: 'courier new'; font-size: 12px; color: rgb(248, 248, 212); border-radius: 0px; margin-top: 20px; margin-bottom: 20px; line-height: 20px; word-break: break-all; word-wrap: break-word; white-space: pre-wrap; border: 1px solid rgb(39, 40, 34); overflow: hidden; font-stretch: normal; background-color: rgb(39, 40, 34);">libldap2-dev&nbsp;:&nbsp;Depends:&nbsp;libldap-2.4-2&nbsp;(=&nbsp;2.4.31-2+deb7u1)&nbsp;but&nbsp;2.4.31+really2.4.40+dfsg-1+deb8u1~bpo70+1&nbsp;is&nbsp;to&nbsp;be&nbsp;installed
+librtmp-dev&nbsp;:&nbsp;Depends:&nbsp;libgnutls-dev&nbsp;but&nbsp;it&nbsp;is&nbsp;not&nbsp;going&nbsp;to&nbsp;be&nbsp;installed
+libgnutls-dev&nbsp;:&nbsp;Depends:&nbsp;libp11-kit-dev&nbsp;(&gt;=&nbsp;0.4)&nbsp;but&nbsp;it&nbsp;is&nbsp;not&nbsp;going&nbsp;to&nbsp;be&nbsp;installed
+libp11-kit-dev&nbsp;:&nbsp;Depends:&nbsp;libp11-kit0&nbsp;(=&nbsp;0.12-3)&nbsp;but&nbsp;0.20.7-1~bpo70+1&nbsp;is&nbsp;to&nbsp;be&nbsp;installed</pre><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;">那么解决办法就是把最底层的依赖包 libp11-kit0 先卸载掉，然后再安装 libcurl4-nss-dev 即可。</p><pre class="prettyprint lang-bsh" style="padding: 8px; font-family: 'courier new'; font-size: 12px; color: rgb(248, 248, 212); border-radius: 0px; margin-top: 20px; margin-bottom: 20px; line-height: 20px; word-break: break-all; word-wrap: break-word; white-space: pre-wrap; border: 1px solid rgb(39, 40, 34); overflow: hidden; font-stretch: normal; background-color: rgb(39, 40, 34);">apt-get&nbsp;-y&nbsp;remove&nbsp;libp11-kit0
+apt-get&nbsp;-y&nbsp;--no-install-recommends&nbsp;install&nbsp;libcurl4-nss-dev&nbsp;wget</pre><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;">然后再运行脚本安装即可。</p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;"><span style="color: red;">2016 年 04 月 22 日：</span><br>修复了在 Ubuntu 16.04 下因为默认缺少 python 命令而导致 ipsec verify 等命令不能用的问题。</p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;"><span style="color: red;">2016 年 04 月 19 日：</span><br>修复了在 Debian 7 下因为 libnss3 和 libnspr4 的版本过低而导致编译 libreswan 失败的问题。</p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;"><span style="color: red;">2016 年 04 月 18 日：</span><br>目前在 Debian 7 上测试的结果，因为 libnss3 和 libnspr4 的版本过低而导致编译 libreswan 失败。临时解决办法是 dpkg 安装 libnss3_3.17.2 和 libnspr4_4.10.7 的 deb 包后重试。</p><p style="margin-top: 0px; margin-bottom: 15px; color: rgb(85, 85, 85); font-family: 'Microsoft Yahei', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 25px; white-space: normal;"><span style="color: blue;"><strong>参考链接：</strong></span><br><a target="_blank" href="https://libreswan.org/wiki/3.14_on_Debian_Wheezy" style="color: rgb(66, 139, 202); text-decoration: none;">https://libreswan.org/wiki/3.14_on_Debian_Wheezy</a><br><a target="_blank" href="https://github.com/libreswan/libreswan" style="color: rgb(66, 139, 202); text-decoration: none;">https://github.com/libreswan/libreswan</a></p><p><br></p><div id="dpajax" style="display:none;"></div></div>
+<p class="post-copyright">除特别注明外，本站所有文章均为<a href="http://www.hzgome.cn/" style="color:#51aded;">初见博客</a>原创，转载请注明出处来自<a href="http://www.hzgome.cn/?id=103" style="color:#51aded;">http://www.hzgome.cn/?id=103</a></p>
+<div class="bdtbox">
+<div class="bdsharebuttonbox bdshare-button-style0-24" data-bd-bind="1576816779922"><a href="#" class="bds_more" data-cmd="more"></a><a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a><a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a><a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博"></a><a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网"></a><a href="#" class="bds_tqf" data-cmd="tqf" title="分享到腾讯朋友"></a><a href="#" class="bds_kaixin001" data-cmd="kaixin001" title="分享到开心网"></a><a href="#" class="bds_bdhome" data-cmd="bdhome" title="分享到百度新首页"></a><a href="#" class="bds_huaban" data-cmd="huaban" title="分享到花瓣"></a></div>
+<script>
+	window._bd_share_config = {
+        "common": {
+            "bdSnsKey": {},
+            "bdText": "",
+            "bdMini": "2",
+            "bdMiniList": false,
+            "bdPic": "",
+            "bdStyle": "0",
+            "bdSize": "24"
+        },
+        "share": {}
+    };
+	with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+</div>
+<div class="cl" style="padding: 30px 0 25px 0;">
+<div class="aprev">上一篇：<a href="http://www.hzgome.cn/?id=102" style="color: #1696D3;">为XenServer挂载/增加第二块硬盘的方法</a></div> <div class="anext">下一篇：<a href="http://www.hzgome.cn/?id=104" style="text-align: right; color: #1696D3;">Xenserver常用命令汇总</a></div> </div>
+</div>
+</div></div>
+<aside class="sidebar">
+<dl class="function" id="divCatalog">
+<dt class="function_t">网站分类</dt><dd class="function_c">
+<ul><li><a href="http://www.hzgome.cn/?cate=1">个人随笔</a></li>
+<li><a href="http://www.hzgome.cn/?cate=9">软件专题</a></li>
+<li><a href="http://www.hzgome.cn/?cate=16">Windows专题</a></li>
+<li><a href="http://www.hzgome.cn/?cate=10">易语言专题</a></li>
+<li><a href="http://www.hzgome.cn/?cate=21">ERP专题</a></li>
+<li><a href="http://www.hzgome.cn/?cate=22">数据库专题</a></li>
+<li><a href="http://www.hzgome.cn/?cate=17">网站技术专题</a></li>
+<li><a href="http://www.hzgome.cn/?cate=11">SEO笔记</a></li>
+<li><a href="http://www.hzgome.cn/?cate=20">WEB前端</a></li>
+<li><a href="http://www.hzgome.cn/?cate=8">Linux专题</a></li>
+<li><a href="http://www.hzgome.cn/?cate=18">网站环境搭建</a></li>
+<li><a href="http://www.hzgome.cn/?cate=12">xenserver</a></li>
+<li><a href="http://www.hzgome.cn/?cate=5">网站CMS专题</a></li>
+<li><a href="http://www.hzgome.cn/?cate=15">wordpress插件</a></li>
+<li><a href="http://www.hzgome.cn/?cate=6">wordpress笔记</a></li>
+<li><a href="http://www.hzgome.cn/?cate=14">建站成功案例</a></li>
+<li><a href="http://www.hzgome.cn/?cate=13">主题帮助文档</a></li>
+<li><a href="http://www.hzgome.cn/?cate=3">zblog笔记</a></li>
+<li><a href="http://www.hzgome.cn/?cate=4">zblog教程</a></li>
+<li><a href="http://www.hzgome.cn/?cate=2">杰奇CMS</a></li>
+</ul>
+</dd>
+</dl><dl class="function" id="divPrevious">
+<dt class="function_t">最近发表</dt><dd class="function_c">
+<ul><li><a href="http://www.hzgome.cn/?id=114">好用的文件同步软件diffsync（文件夹同步）+SyncExpert（文件夹同步而且支持子目录）</a></li>
+<li><a href="http://www.hzgome.cn/?id=113">不进内测组，小米6手动安装MIUI10的方法分享，喜欢的顶贴</a></li>
+<li><a href="http://www.hzgome.cn/?id=110">Kangle目录遍历漏洞 修复办法，Kangle锁用户运行目录的方法，Kangle用户隔离的方案</a></li>
+<li><a href="http://www.hzgome.cn/?id=108">从TDP看性能！带你走进CPU功耗的世界</a></li>
+<li><a href="http://www.hzgome.cn/?id=107">万网虚拟主机搭建wordpress，打开网页出现InternalServerError（500错误）终极解决办法</a></li>
+<li><a href="http://www.hzgome.cn/?id=106">IIS连接数、IIS并发连接数、IIS最大并发工作线程数、应用程序池的队列长度、应用程序池的最大工作进程数 吗？</a></li>
+<li><a href="http://www.hzgome.cn/?id=105">CentOS虚拟机是没有安装XenServer Tools</a></li>
+<li><a href="http://www.hzgome.cn/?id=104">Xenserver常用命令汇总</a></li>
+<li><a href="http://www.hzgome.cn/?id=103">linux系统(CentOS6+，Debian7+，Ubuntu12+）搭建VPN(L2TP/IPSec)一键安装脚本</a></li>
+<li><a href="http://www.hzgome.cn/?id=102">为XenServer挂载/增加第二块硬盘的方法</a></li>
+</ul>
+</dd>
+</dl><dl class="function" id="divArchives">
+<dt class="function_t">文章归档</dt><dd class="function_c">
+<ul><li><a href="http://www.hzgome.cn/?date=2018-9">2018年9月 (1)</a></li>
+<li><a href="http://www.hzgome.cn/?date=2018-6">2018年6月 (1)</a></li>
+<li><a href="http://www.hzgome.cn/?date=2018-4">2018年4月 (1)</a></li>
+<li><a href="http://www.hzgome.cn/?date=2018-3">2018年3月 (1)</a></li>
+<li><a href="http://www.hzgome.cn/?date=2017-11">2017年11月 (2)</a></li>
+<li><a href="http://www.hzgome.cn/?date=2017-7">2017年7月 (4)</a></li>
+<li><a href="http://www.hzgome.cn/?date=2017-2">2017年2月 (1)</a></li>
+<li><a href="http://www.hzgome.cn/?date=2016-8">2016年8月 (1)</a></li>
+<li><a href="http://www.hzgome.cn/?date=2016-4">2016年4月 (2)</a></li>
+<li><a href="http://www.hzgome.cn/?date=2016-3">2016年3月 (7)</a></li>
+<li><a href="http://www.hzgome.cn/?date=2015-9">2015年9月 (1)</a></li>
+<li><a href="http://www.hzgome.cn/?date=2014-11">2014年11月 (6)</a></li>
+<li><a href="http://www.hzgome.cn/?date=2014-4">2014年4月 (1)</a></li>
+<li><a href="http://www.hzgome.cn/?date=2014-3">2014年3月 (3)</a></li>
+<li><a href="http://www.hzgome.cn/?date=2014-2">2014年2月 (1)</a></li>
+<li><a href="http://www.hzgome.cn/?date=2014-1">2014年1月 (2)</a></li>
+<li><a href="http://www.hzgome.cn/?date=2013-12">2013年12月 (23)</a></li>
+<li><a href="http://www.hzgome.cn/?date=2013-11">2013年11月 (1)</a></li>
+<li><a href="http://www.hzgome.cn/?date=2013-2">2013年2月 (1)</a></li>
+<li><a href="http://www.hzgome.cn/?date=2013-1">2013年1月 (2)</a></li>
+<li><a href="http://www.hzgome.cn/?date=2012-10">2012年10月 (1)</a></li>
+<li><a href="http://www.hzgome.cn/?date=2012-3">2012年3月 (32)</a></li>
+<li><a href="http://www.hzgome.cn/?date=2011-1">2011年1月 (1)</a></li>
+<li><a href="http://www.hzgome.cn/?date=2010-1">2010年1月 (1)</a></li>
+<li><a href="http://www.hzgome.cn/?date=2008-12">2008年12月 (1)</a></li>
+</ul>
+</dd>
+</dl></aside>
+</section>
+<div style="clear:both;"></div>
+<footer class="footer">
+<p style="text-align: center; font-size: 12px;">© 2008-2016 <a href="http://www.hzgome.cn/">初见博客</a> · Powered By <a href="http://www.zblogcn.com/" title="RainbowSoft Z-BlogPHP" target="_blank">Z-BlogPHP</a> · <a href="http://www.beian.miit.gov.cn/" target="_blank">浙ICP备09072553号-1</a><a href="http://www.hzgome.cn/zb_system/login.php">[login]</a></p>
+<p style="display:none;"><script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_2176682'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s9.cnzz.com/stat.php%3Fid%3D2176682' type='text/javascript'%3E%3C/script%3E"));</script><span id="cnzz_stat_icon_2176682"><a href="https://www.cnzz.com/stat/website.php?web_id=2176682" target="_blank" title="站长统计">站长统计</a></span><script src="linux%E7%B3%BB%E7%BB%9F(CentOS6+%EF%BC%8CDebian7+%EF%BC%8CUbuntu12+%EF%BC%89%E6%90%AD%E5%BB%BAVPN(L2TP_IPSec)%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85%E8%84%9A%E6%9C%AC_Linux%E4%B8%93%E9%A2%98_%E5%88%9D%E8%A7%81%E5%8D%9A%E5%AE%A2_files/stat.php" type="text/javascript"></script><script src="linux%E7%B3%BB%E7%BB%9F(CentOS6+%EF%BC%8CDebian7+%EF%BC%8CUbuntu12+%EF%BC%89%E6%90%AD%E5%BB%BAVPN(L2TP_IPSec)%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85%E8%84%9A%E6%9C%AC_Linux%E4%B8%93%E9%A2%98_%E5%88%9D%E8%A7%81%E5%8D%9A%E5%AE%A2_files/core.php" charset="utf-8" type="text/javascript"></script></p>
+</footer>
+</div>
+<script type="text/javascript" src="linux%E7%B3%BB%E7%BB%9F(CentOS6+%EF%BC%8CDebian7+%EF%BC%8CUbuntu12+%EF%BC%89%E6%90%AD%E5%BB%BAVPN(L2TP_IPSec)%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85%E8%84%9A%E6%9C%AC_Linux%E4%B8%93%E9%A2%98_%E5%88%9D%E8%A7%81%E5%8D%9A%E5%AE%A2_files/flv.js"></script>
+<script type="text/javascript" src="linux%E7%B3%BB%E7%BB%9F(CentOS6+%EF%BC%8CDebian7+%EF%BC%8CUbuntu12+%EF%BC%89%E6%90%AD%E5%BB%BAVPN(L2TP_IPSec)%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85%E8%84%9A%E6%9C%AC_Linux%E4%B8%93%E9%A2%98_%E5%88%9D%E8%A7%81%E5%8D%9A%E5%AE%A2_files/DPlayer.js"></script>
+<script>function dpajaxload(){if(0<$('#dpajax').length){var DPlayerOptions=[];eval($('#dpajax').text());for(i=0;i<DPlayerOptions.length;i++)new DPlayer({element:document.getElementById('dp'+DPlayerOptions[i].id),autoplay:DPlayerOptions[i].autoplay,theme:DPlayerOptions[i].theme,loop:DPlayerOptions[i].loop,lang:DPlayerOptions[i].lang,screenshot:DPlayerOptions[i].screenshot,hotkey:DPlayerOptions[i].hotkey,preload:DPlayerOptions[i].preload,video:DPlayerOptions[i].video,danmaku:DPlayerOptions[i].danmaku})}}dpajaxload();</script>
+<script type="text/javascript" src="linux%E7%B3%BB%E7%BB%9F(CentOS6+%EF%BC%8CDebian7+%EF%BC%8CUbuntu12+%EF%BC%89%E6%90%AD%E5%BB%BAVPN(L2TP_IPSec)%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85%E8%84%9A%E6%9C%AC_Linux%E4%B8%93%E9%A2%98_%E5%88%9D%E8%A7%81%E5%8D%9A%E5%AE%A2_files/su_new.js"></script>
+
+
+</body></html>
