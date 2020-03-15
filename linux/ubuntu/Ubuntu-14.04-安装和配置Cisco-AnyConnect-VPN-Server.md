@@ -78,7 +78,7 @@ $ cd certificates
 ```bash
 $ date +%s
 
-1500541096
+1582856573
 ```
 然后写入到 serial = 1500541096
 
