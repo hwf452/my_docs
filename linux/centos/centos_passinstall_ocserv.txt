@@ -8,8 +8,9 @@ chmod 777 ocserv-install-script-for-centos7.sh
 vi ocserv-install-script-for-centos7.sh
 
 将其中 ocserv_version=”0.10.9″ 这一行的版本号改成 0.9.2，据说此版本较稳定。
-
-
+confdir="/usr/local/etc/ocserv" 改为confdir="/etc/ocserv"
+port=10443 改为 port=50443
+username=user 改为 username=ocserv
 
 
 3.然后执行脚本
@@ -21,8 +22,11 @@ sh ocserv-install-script-for-centos7.sh
 
 安装完成后编辑配置文件
 
-vi /usr/local/etc/ocserv/ocserv.conf
-
+vim /etc/ocserv/ocserv.conf
+修改
+isolate-workers = true 
+成
+isolate-workers = false
 
 保存配置文件，执行下面的代码重启Ocserv服务
 
@@ -31,6 +35,8 @@ systemctl restart ocserv.service
 如果想给朋友们使用，也可以添加几个用户，使用下面的命令
 
 ocpasswd -c /usr/local/etc/ocserv/ocpasswd 用户名
+如
+ocpasswd -c /etc/ocserv/ocpasswd harry
 
 
 执行后会提示设置密码，按需输入即可。
