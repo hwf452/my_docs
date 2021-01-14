@@ -77,7 +77,7 @@ $ cd certificates
 这里需要先输入一个命令获得当前的时间戳（数值），例如：
 ```bash
 $ date +%s
-1584443987
+1607487162
 ```
 然后写入到 serial = 1500541096
 
@@ -86,8 +86,8 @@ $ vim ca.tmpl
 
 cn = "VPN CA"
 organization = "Cisco Inc."
-serial = 1500541096
-expiration_days = 3650
+serial = 1607487162
+expiration_days = 36500
 ca
 signing_key
 cert_signing_key
@@ -109,7 +109,7 @@ $ certtool --generate-self-signed --load-privkey ca-key.pem --template ca.tmpl -
 ```bash
 $ date +%s
 
-1500541096
+1607487162
 ```
 然后写入到 serial = 1500541096
 
@@ -118,8 +118,8 @@ $ vim server.tmpl
 
 cn = "202.103.204.68"
 organization = "Cisco Inc."
-serial = 1500541096
-expiration_days = 3650
+serial = 1607487162
+expiration_days = 36500
 signing_key
 encryption_key
 tls_www_server
